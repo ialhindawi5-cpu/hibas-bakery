@@ -1,0 +1,325 @@
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #faf3ef;
+}
+.admin-side {
+  width: 244px;
+  background: #3a2b1f;
+  color: #f3e7df;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.admin-brand {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  line-height: 1.1;
+  margin-bottom: 26px;
+}
+.admin-brand span {
+  display: block;
+  color: #e0a0b0;
+  font-size: 0.78rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.admin-side nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.admin-side nav a {
+  color: #d9c7bb;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.admin-side nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.admin-side nav a.active {
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  color: #fff;
+}
+.admin-side-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 16px;
+}
+.admin-side-foot a {
+  color: #d9c7bb;
+  font-size: 0.9rem;
+}
+.admin-side-foot button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f3e7df;
+  padding: 9px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.admin-side-foot button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.admin-main {
+  flex: 1;
+  padding: 34px 38px;
+  max-width: 1040px;
+}
+.admin-h1 {
+  font-family: var(--serif);
+  font-size: 1.9rem;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.admin-sub {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.admin-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  margin-bottom: 18px;
+}
+.admin-card h2 {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  margin-bottom: 14px;
+}
+.admin-field {
+  margin-bottom: 16px;
+}
+.admin-field label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.admin-field input,
+.admin-field textarea,
+.admin-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+}
+.admin-field textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.admin-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.admin-row .admin-field {
+  flex: 1;
+  min-width: 180px;
+}
+.admin-btn {
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  color: #fff;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.admin-btn-sec {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-btn-danger {
+  background: #fff;
+  color: #b3261e;
+  border: 1px solid #eccac6;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.admin-note {
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+.admin-note.ok {
+  background: #eaf7ec;
+  color: #1d6b2b;
+  border: 1px solid #bfe3c4;
+}
+.admin-note.err {
+  background: #fdecea;
+  color: #b3261e;
+  border: 1px solid #f5c6c2;
+}
+.admin-note.warn {
+  background: #fff7e6;
+  color: #8a6d3b;
+  border: 1px solid #f0e0b8;
+}
+.order-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  background: #fff;
+}
+.order-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.order-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.order-meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.badge.new {
+  background: #fde7ee;
+  color: #c2607a;
+}
+.badge.confirmed {
+  background: #e3f0fb;
+  color: #2b6cb0;
+}
+.badge.completed {
+  background: #eaf7ec;
+  color: #1d6b2b;
+}
+.badge.cancelled {
+  background: #f0eceb;
+  color: #8a7461;
+}
+.order-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 6px 18px;
+  font-size: 0.9rem;
+  margin: 10px 0;
+}
+.order-grid b {
+  color: var(--muted);
+  font-weight: 600;
+}
+.admin-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(60% 60% at 50% 0, #fce0e7, var(--bg));
+  padding: 24px;
+}
+.admin-login-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 34px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-lg);
+}
+.admin-login-card h1 {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.admin-login-card p.s {
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 22px;
+  font-size: 0.92rem;
+}
+.menu-admin-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+.menu-admin-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--bg-soft);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+}
+.logo-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 14px;
+  object-fit: contain;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  padding: 6px;
+}
+@media (max-width: 720px) {
+  .admin-shell {
+    flex-direction: column;
+  }
+  .admin-side {
+    width: auto;
+    height: auto;
+    position: static;
+  }
+  .admin-main {
+    padding: 20px;
+  }
+}
