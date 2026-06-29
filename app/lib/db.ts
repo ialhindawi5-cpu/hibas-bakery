@@ -1,5 +1,10 @@
 import { neon } from "@neondatabase/serverless";
-import { DEFAULT_SETTINGS, DEFAULT_MENU, DEFAULT_GALLERY } from "./defaults";
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_MENU,
+  DEFAULT_GALLERY,
+  DEFAULT_QUESTIONS,
+} from "./defaults";
 
 const url = process.env.DATABASE_URL;
 
@@ -56,6 +61,19 @@ async function init() {
     pickup_time text DEFAULT '',
     status text NOT NULL DEFAULT 'new'
   )`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS answers jsonb NOT NULL DEFAULT '[]'`;
+
+  await sql`CREATE TABLE IF NOT EXISTS questions (
+    id serial PRIMARY KEY,
+    qkey text NOT NULL,
+    label text NOT NULL,
+    type text NOT NULL DEFAULT 'text',
+    options jsonb NOT NULL DEFAULT '[]',
+    required boolean NOT NULL DEFAULT false,
+    role text NOT NULL DEFAULT 'none',
+    sort_order int NOT NULL DEFAULT 0,
+    active boolean NOT NULL DEFAULT true
+  )`;
 
   const s = await sql`SELECT id FROM settings WHERE id = 1`;
   if (s.length === 0) {
@@ -74,6 +92,14 @@ async function init() {
   if (g[0].c === 0) {
     for (const it of DEFAULT_GALLERY) {
       await sql`INSERT INTO gallery (src,alt,sort_order) VALUES (${it.src},${it.alt},${it.sortOrder})`;
+    }
+  }
+
+  const q = await sql`SELECT count(*)::int AS c FROM questions`;
+  if (q[0].c === 0) {
+    for (const it of DEFAULT_QUESTIONS) {
+      await sql`INSERT INTO questions (qkey,label,type,options,required,role,sort_order,active)
+        VALUES (${it.qkey},${it.label},${it.type},${JSON.stringify(it.options)}::jsonb,${it.required},${it.role},${it.sortOrder},${it.active})`;
     }
   }
 }

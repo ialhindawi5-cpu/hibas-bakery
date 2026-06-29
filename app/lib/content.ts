@@ -1,8 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { sql, ensureDb } from "./db";
-import { DEFAULT_SETTINGS, DEFAULT_MENU, DEFAULT_GALLERY } from "./defaults";
-import type { Settings, MenuItem, GalleryImage } from "./types";
+import {
+  DEFAULT_SETTINGS,
+  DEFAULT_MENU,
+  DEFAULT_GALLERY,
+  DEFAULT_QUESTIONS,
+} from "./defaults";
+import type { Settings, MenuItem, GalleryImage, Question } from "./types";
 
 /* ---------------- Settings ---------------- */
 
@@ -86,6 +91,63 @@ export async function getGallery(): Promise<GalleryImage[]> {
   const rows = await sql`SELECT * FROM gallery ORDER BY sort_order, id`;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return rows.map((r: any) => ({ id: r.id, src: r.src, alt: r.alt, sortOrder: r.sort_order }));
+}
+
+/* ---------------- Questions (order form builder) ---------------- */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapQuestion(r: any): Question {
+  return {
+    id: r.id,
+    qkey: r.qkey,
+    label: r.label,
+    type: r.type,
+    options: Array.isArray(r.options) ? r.options : [],
+    required: r.required,
+    role: r.role,
+    sortOrder: r.sort_order,
+    active: r.active,
+  };
+}
+
+export async function getQuestions(opts?: { activeOnly?: boolean }): Promise<Question[]> {
+  if (!sql) {
+    const list = DEFAULT_QUESTIONS.map((q, i) => ({ id: i + 1, ...q }));
+    return opts?.activeOnly ? list.filter((q) => q.active) : list;
+  }
+  await ensureDb();
+  const rows = opts?.activeOnly
+    ? await sql`SELECT * FROM questions WHERE active = true ORDER BY sort_order, id`
+    : await sql`SELECT * FROM questions ORDER BY sort_order, id`;
+  return rows.map(mapQuestion);
+}
+
+export async function addQuestion(q: Omit<Question, "id">): Promise<Question> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  const rows = await sql`INSERT INTO questions (qkey,label,type,options,required,role,sort_order,active)
+    VALUES (${q.qkey},${q.label},${q.type},${JSON.stringify(q.options)}::jsonb,${q.required},${q.role},${q.sortOrder},${q.active})
+    RETURNING *`;
+  return mapQuestion(rows[0]);
+}
+
+export async function updateQuestion(id: number, patch: Partial<Question>): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  const all = await getQuestions();
+  const cur = all.find((q) => q.id === id);
+  if (!cur) throw new Error("Question not found");
+  const n = { ...cur, ...patch };
+  await sql`UPDATE questions SET
+    qkey=${n.qkey}, label=${n.label}, type=${n.type}, options=${JSON.stringify(n.options)}::jsonb,
+    required=${n.required}, role=${n.role}, sort_order=${n.sortOrder}, active=${n.active}
+    WHERE id=${id}`;
+}
+
+export async function deleteQuestion(id: number): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`DELETE FROM questions WHERE id=${id}`;
 }
 
 /* ---------------- Logo ---------------- */

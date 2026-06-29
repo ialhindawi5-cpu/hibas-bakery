@@ -1,42 +1,53 @@
 import { NextResponse } from "next/server";
 import { createOrder, type NewOrder } from "@/app/lib/orders";
-import { getSettings } from "@/app/lib/content";
+import { getSettings, getQuestions } from "@/app/lib/content";
 import { sendOrderEmail } from "@/app/lib/email";
-import type { Order } from "@/app/lib/types";
+import type { Order, OrderAnswer } from "@/app/lib/types";
 
 export const runtime = "nodejs";
 
+type IncomingAnswer = { qkey?: string; label?: string; value?: unknown };
+
 export async function POST(req: Request) {
-  let body: Record<string, unknown>;
+  let body: { answers?: IncomingAnswer[] };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const str = (v: unknown) => (v == null ? "" : String(v));
-  const required = ["customerStatus", "name", "phone", "contactMethod", "pickupDate", "pickupTime"];
-  for (const f of required) {
-    if (!str(body[f]).trim()) {
-      return NextResponse.json({ error: `Missing field: ${f}` }, { status: 400 });
+  const incoming = Array.isArray(body.answers) ? body.answers : [];
+  // Map submitted answers by question key.
+  const byKey = new Map<string, string>();
+  for (const a of incoming) {
+    if (a && a.qkey) byKey.set(String(a.qkey), a.value == null ? "" : String(a.value));
+  }
+
+  const questions = await getQuestions({ activeOnly: true });
+
+  // Validate required questions.
+  for (const q of questions) {
+    if (q.required && !(byKey.get(q.qkey) || "").trim()) {
+      return NextResponse.json({ error: `Missing field: ${q.label}` }, { status: 400 });
     }
   }
-  const items = Array.isArray(body.items) ? body.items.map(str).filter(Boolean) : [];
-  if (items.length === 0) {
-    return NextResponse.json({ error: "Please select at least one item" }, { status: 400 });
+
+  // Build the labelled answer list and the role-mapped fields.
+  const answers: OrderAnswer[] = [];
+  const role: Record<string, string> = {};
+  for (const q of questions) {
+    const value = (byKey.get(q.qkey) || "").trim();
+    answers.push({ label: q.label, value });
+    if (q.role !== "none") role[q.role] = value;
   }
 
   const newOrder: NewOrder = {
-    customerStatus: str(body.customerStatus),
-    items,
-    allergies: str(body.allergies),
-    name: str(body.name),
-    phone: str(body.phone),
-    email: str(body.email),
-    contactMethod: str(body.contactMethod),
-    comments: str(body.comments),
-    pickupDate: str(body.pickupDate),
-    pickupTime: str(body.pickupTime),
+    name: role.name || "",
+    phone: role.phone || "",
+    email: role.email || "",
+    pickupDate: role.date || "",
+    pickupTime: role.time || "",
+    answers,
   };
 
   const settings = await getSettings();

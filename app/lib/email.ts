@@ -30,23 +30,13 @@ export async function sendOrderEmail(
   const t = getTransport();
   if (!t) return { sent: false, reason: "email-not-configured" };
 
-  const rows: [string, string][] = [
-    ["Customer", order.name],
-    ["Status", order.customerStatus],
-    ["Items", order.items.join(", ")],
-    ["Allergies", order.allergies || "None provided"],
-    ["Phone", order.phone],
-    ["Email", order.email || "Not provided"],
-    ["Preferred contact", order.contactMethod],
-    ["Pickup date", order.pickupDate],
-    ["Pickup time", order.pickupTime],
-    ["Comments", order.comments || "None"],
-  ];
+  const rows = order.answers.filter((a) => a.value && a.value.trim().length > 0);
 
   const text =
     `New order request from the ${siteName} website\n` +
     `----------------------------------------\n` +
-    rows.map(([k, v]) => `${k}: ${v}`).join("\n");
+    rows.map((a) => `${a.label}: ${a.value}`).join("\n") +
+    `\n\nReceived: ${order.createdAt}`;
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#3a2b1f">
@@ -55,9 +45,11 @@ export async function sendOrderEmail(
       <table style="width:100%;border-collapse:collapse;font-size:14px">
         ${rows
           .map(
-            ([k, v]) =>
-              `<tr><td style="padding:8px 10px;background:#faf0ec;font-weight:bold;width:160px;border:1px solid #eee">${k}</td><td style="padding:8px 10px;border:1px solid #eee">${escapeHtml(
-                v
+            (a) =>
+              `<tr><td style="padding:8px 10px;background:#faf0ec;font-weight:bold;width:170px;border:1px solid #eee;vertical-align:top">${escapeHtml(
+                a.label
+              )}</td><td style="padding:8px 10px;border:1px solid #eee">${escapeHtml(
+                a.value
               )}</td></tr>`
           )
           .join("")}
@@ -77,8 +69,5 @@ export async function sendOrderEmail(
 }
 
 function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

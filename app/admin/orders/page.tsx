@@ -81,7 +81,7 @@ export default function AdminOrders() {
         <div className="order-card" key={o.id}>
           <div className="order-head">
             <div>
-              <span className="order-name">{o.name}</span>{" "}
+              <span className="order-name">{o.name || "Order"}</span>{" "}
               <span className={`badge ${o.status}`}>{o.status}</span>
             </div>
             <span className="order-meta">
@@ -90,34 +90,13 @@ export default function AdminOrders() {
           </div>
 
           <div className="order-grid">
-            <div>
-              <b>Items:</b> {o.items.join(", ")}
-            </div>
-            <div>
-              <b>Phone:</b> {o.phone}
-            </div>
-            <div>
-              <b>Email:</b> {o.email || "—"}
-            </div>
-            <div>
-              <b>Prefers:</b> {o.contactMethod}
-            </div>
-            <div>
-              <b>Pickup:</b> {o.pickupDate} {o.pickupTime}
-            </div>
-            <div>
-              <b>Customer:</b> {o.customerStatus}
-            </div>
-            {o.allergies && (
-              <div>
-                <b>Allergies:</b> {o.allergies}
-              </div>
-            )}
-            {o.comments && (
-              <div>
-                <b>Comments:</b> {o.comments}
-              </div>
-            )}
+            {o.answers
+              .filter((a) => a.value && a.value.trim())
+              .map((a, i) => (
+                <div key={i}>
+                  <b>{a.label}:</b> {a.value}
+                </div>
+              ))}
           </div>
 
           <div className="admin-actions">

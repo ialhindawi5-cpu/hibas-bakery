@@ -1,4 +1,4 @@
-import type { Settings, MenuItem, GalleryImage } from "./types";
+import type { Settings, MenuItem, GalleryImage, Question } from "./types";
 
 export const DEFAULT_SETTINGS: Settings = {
   siteName: "Hiba's Bakery",
@@ -79,11 +79,15 @@ export const DEFAULT_GALLERY: Omit<GalleryImage, "id">[] = [
   { src: "/images/chocolate-sourdough.jpg", alt: "Chocolate sourdough loaf", sortOrder: 6 },
 ];
 
-/** Order menu options as shown on the order form (matches the original Google form). */
-export const ORDER_MENU_OPTIONS = [
-  "Crinkle Cookies",
-  "Chocolate Chip Cookies",
-  "Arab desserts (Qataif, Madlouka, Maamoul)",
-  "Layali Lebnan cheesecake",
-  "Sourdough breads",
+/** Default order-form questions (the "new/existing customer" question is intentionally omitted). */
+export const DEFAULT_QUESTIONS: Omit<Question, "id">[] = [
+  { qkey: "items", label: "What would you like to order?", type: "menu", options: [], required: true, role: "items", sortOrder: 1, active: true },
+  { qkey: "allergies", label: "Any allergies?", type: "textarea", options: [], required: false, role: "none", sortOrder: 2, active: true },
+  { qkey: "name", label: "Your name", type: "text", options: [], required: true, role: "name", sortOrder: 3, active: true },
+  { qkey: "phone", label: "Phone number", type: "tel", options: [], required: true, role: "phone", sortOrder: 4, active: true },
+  { qkey: "email", label: "E-mail", type: "email", options: [], required: false, role: "email", sortOrder: 5, active: true },
+  { qkey: "contact_method", label: "Preferred contact method", type: "radio", options: ["Phone", "Email"], required: true, role: "none", sortOrder: 6, active: true },
+  { qkey: "pickup_date", label: "Pickup date", type: "date", options: [], required: true, role: "date", sortOrder: 7, active: true },
+  { qkey: "pickup_time", label: "Pickup time", type: "time", options: [], required: true, role: "time", sortOrder: 8, active: true },
+  { qkey: "comments", label: "Questions and comments", type: "textarea", options: [], required: false, role: "none", sortOrder: 9, active: true },
 ];

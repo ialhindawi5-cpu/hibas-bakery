@@ -1,48 +1,60 @@
 "use client";
 
 import { useState } from "react";
+import type { Question } from "../lib/types";
 
-type Errors = Record<string, string>;
+type Values = Record<string, string | string[]>;
 
 export default function OrderForm({
+  questions,
   menuOptions,
   pickup,
   phoneDisplay,
 }: {
+  questions: Question[];
   menuOptions: string[];
   pickup: string;
   phoneDisplay: string;
 }) {
-  const [customerStatus, setCustomerStatus] = useState("");
-  const [menu, setMenu] = useState<string[]>([]);
-  const [allergies, setAllergies] = useState("");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [contactMethod, setContactMethod] = useState("");
-  const [comments, setComments] = useState("");
-  const [pickupDate, setPickupDate] = useState("");
-  const [pickupTime, setPickupTime] = useState("");
-  const [errors, setErrors] = useState<Errors>({});
+  const initial: Values = {};
+  for (const q of questions) {
+    initial[q.qkey] = q.type === "checkbox" || q.type === "menu" ? [] : "";
+  }
+
+  const [values, setValues] = useState<Values>(initial);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [serverError, setServerError] = useState("");
 
-  function toggleMenu(item: string) {
-    setMenu((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
+  function set(qkey: string, value: string | string[]) {
+    setValues((v) => ({ ...v, [qkey]: value }));
   }
 
-  function validate(): Errors {
-    const e: Errors = {};
-    if (!customerStatus) e.customerStatus = "Please select an option.";
-    if (menu.length === 0) e.menu = "Please choose at least one item.";
-    if (!name.trim()) e.name = "Please enter your name.";
-    if (!phone.trim()) e.phone = "Please enter your phone number.";
-    if (!contactMethod) e.contactMethod = "Please choose a contact method.";
-    if (!pickupDate) e.pickupDate = "Please choose a pickup date.";
-    if (!pickupTime) e.pickupTime = "Please choose a pickup time.";
+  function toggleMulti(qkey: string, option: string) {
+    setValues((v) => {
+      const arr = Array.isArray(v[qkey]) ? (v[qkey] as string[]) : [];
+      return {
+        ...v,
+        [qkey]: arr.includes(option) ? arr.filter((o) => o !== option) : [...arr, option],
+      };
+    });
+  }
+
+  function optionsFor(q: Question): string[] {
+    return q.type === "menu" ? menuOptions : q.options;
+  }
+
+  function isEmpty(q: Question): boolean {
+    const v = values[q.qkey];
+    return Array.isArray(v) ? v.length === 0 : !String(v).trim();
+  }
+
+  function validate(): Record<string, string> {
+    const e: Record<string, string> = {};
+    for (const q of questions) {
+      if (q.required && isEmpty(q)) e[q.qkey] = "This field is required.";
+    }
     return e;
   }
 
@@ -52,29 +64,21 @@ export default function OrderForm({
     const e = validate();
     setErrors(e);
     if (Object.keys(e).length > 0) {
-      document
-        .querySelector(".error")
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.querySelector(".error")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+
+    const answers = questions.map((q) => {
+      const v = values[q.qkey];
+      return { qkey: q.qkey, label: q.label, value: Array.isArray(v) ? v.join(", ") : String(v) };
+    });
 
     setSubmitting(true);
     try {
       const res = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerStatus,
-          items: menu,
-          allergies,
-          name,
-          phone,
-          email,
-          contactMethod,
-          comments,
-          pickupDate,
-          pickupTime,
-        }),
+        body: JSON.stringify({ answers }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -96,8 +100,8 @@ export default function OrderForm({
         <div className="success" role="status">
           <strong>Thank you! Your order request has been sent.</strong>
           <br />
-          We&apos;ll contact you shortly about details and availability. For
-          anything urgent, call <strong>{phoneDisplay}</strong>.
+          We&apos;ll contact you shortly about details and availability. For anything urgent,
+          call <strong>{phoneDisplay}</strong>.
         </div>
       </div>
     );
@@ -111,150 +115,77 @@ export default function OrderForm({
         </div>
       )}
 
-      {/* Customer status */}
-      <div className="field">
-        <label className="q">
-          Are you a new or existing customer?<span className="req">*</span>
-        </label>
-        <div className="options">
-          {["I am a new customer", "I am an existing customer"].map((o) => (
-            <label className="opt" key={o}>
-              <input
-                type="radio"
-                name="customerStatus"
-                value={o}
-                checked={customerStatus === o}
-                onChange={() => setCustomerStatus(o)}
-              />
-              {o}
+      {questions.map((q) => {
+        const v = values[q.qkey];
+        const err = errors[q.qkey];
+        return (
+          <div className="field" key={q.qkey}>
+            <label className="q" htmlFor={q.qkey}>
+              {q.label}
+              {q.required && <span className="req">*</span>}
+              {(q.type === "menu" || q.type === "checkbox") && (
+                <span className="hint">Select all that apply.</span>
+              )}
             </label>
-          ))}
-        </div>
-        {errors.customerStatus && <div className="error">{errors.customerStatus}</div>}
-      </div>
 
-      {/* Menu */}
-      <div className="field">
-        <label className="q">
-          What would you like to order?<span className="req">*</span>
-          <span className="hint">Select all that apply.</span>
-        </label>
-        <div className="options">
-          {menuOptions.map((item) => (
-            <label className="opt" key={item}>
-              <input
-                type="checkbox"
-                checked={menu.includes(item)}
-                onChange={() => toggleMenu(item)}
+            {(q.type === "menu" || q.type === "checkbox") && (
+              <div className="options">
+                {optionsFor(q).map((o) => (
+                  <label className="opt" key={o}>
+                    <input
+                      type="checkbox"
+                      checked={Array.isArray(v) && v.includes(o)}
+                      onChange={() => toggleMulti(q.qkey, o)}
+                    />
+                    {o}
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {q.type === "radio" && (
+              <div className="options">
+                {q.options.map((o) => (
+                  <label className="opt" key={o}>
+                    <input
+                      type="radio"
+                      name={q.qkey}
+                      value={o}
+                      checked={v === o}
+                      onChange={() => set(q.qkey, o)}
+                    />
+                    {o}
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {q.type === "textarea" && (
+              <textarea
+                id={q.qkey}
+                value={typeof v === "string" ? v : ""}
+                onChange={(e) => set(q.qkey, e.target.value)}
               />
-              {item}
-            </label>
-          ))}
-        </div>
-        {errors.menu && <div className="error">{errors.menu}</div>}
-      </div>
+            )}
 
-      {/* Allergies */}
-      <div className="field">
-        <label className="q" htmlFor="allergies">
-          Any allergies?
-        </label>
-        <textarea
-          id="allergies"
-          value={allergies}
-          onChange={(e) => setAllergies(e.target.value)}
-          placeholder="Let us know about any allergies or dietary needs."
-        />
-      </div>
-
-      {/* Name */}
-      <div className="field">
-        <label className="q" htmlFor="name">
-          Your name<span className="req">*</span>
-        </label>
-        <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
-        {errors.name && <div className="error">{errors.name}</div>}
-      </div>
-
-      {/* Phone + Email */}
-      <div className="row">
-        <div className="field">
-          <label className="q" htmlFor="phone">
-            Phone number<span className="req">*</span>
-          </label>
-          <input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          {errors.phone && <div className="error">{errors.phone}</div>}
-        </div>
-        <div className="field">
-          <label className="q" htmlFor="email">
-            E-mail
-          </label>
-          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-      </div>
-
-      {/* Preferred contact */}
-      <div className="field">
-        <label className="q">
-          Preferred contact method<span className="req">*</span>
-        </label>
-        <div className="options">
-          {["Phone", "Email"].map((o) => (
-            <label className="opt" key={o}>
+            {["text", "email", "tel", "date", "time"].includes(q.type) && (
               <input
-                type="radio"
-                name="contactMethod"
-                value={o}
-                checked={contactMethod === o}
-                onChange={() => setContactMethod(o)}
+                id={q.qkey}
+                type={q.type}
+                value={typeof v === "string" ? v : ""}
+                onChange={(e) => set(q.qkey, e.target.value)}
               />
-              {o}
-            </label>
-          ))}
-        </div>
-        {errors.contactMethod && <div className="error">{errors.contactMethod}</div>}
-      </div>
+            )}
 
-      {/* Pickup date + time */}
-      <div className="row">
-        <div className="field">
-          <label className="q" htmlFor="pickupDate">
-            Pickup date<span className="req">*</span>
-          </label>
-          <input
-            id="pickupDate"
-            type="date"
-            value={pickupDate}
-            onChange={(e) => setPickupDate(e.target.value)}
-          />
-          {errors.pickupDate && <div className="error">{errors.pickupDate}</div>}
-        </div>
-        <div className="field">
-          <label className="q" htmlFor="pickupTime">
-            Pickup time<span className="req">*</span>
-          </label>
-          <input
-            id="pickupTime"
-            type="time"
-            value={pickupTime}
-            onChange={(e) => setPickupTime(e.target.value)}
-          />
-          {errors.pickupTime && <div className="error">{errors.pickupTime}</div>}
-        </div>
-      </div>
+            {err && <div className="error">{err}</div>}
+          </div>
+        );
+      })}
 
-      {/* Pickup location */}
+      {/* Pickup location (fixed info) */}
       <div className="field">
         <label className="q">Pickup location</label>
         <div className="readonly-box">{pickup}</div>
-      </div>
-
-      {/* Comments */}
-      <div className="field">
-        <label className="q" htmlFor="comments">
-          Questions and comments
-        </label>
-        <textarea id="comments" value={comments} onChange={(e) => setComments(e.target.value)} />
       </div>
 
       <button type="submit" className="btn btn-primary" disabled={submitting}>

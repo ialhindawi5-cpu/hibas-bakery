@@ -31,18 +31,42 @@ export type GalleryImage = {
   sortOrder: number;
 };
 
+export type QuestionType =
+  | "text"
+  | "textarea"
+  | "email"
+  | "tel"
+  | "date"
+  | "time"
+  | "radio"
+  | "checkbox"
+  | "menu";
+
+// A role lets the system map an answer to a known field (for display + email reply-to).
+export type QuestionRole = "none" | "name" | "phone" | "email" | "date" | "time" | "items";
+
+export type Question = {
+  id: number;
+  qkey: string;
+  label: string;
+  type: QuestionType;
+  options: string[];
+  required: boolean;
+  role: QuestionRole;
+  sortOrder: number;
+  active: boolean;
+};
+
+export type OrderAnswer = { label: string; value: string };
+
 export type Order = {
   id: number;
   createdAt: string;
-  customerStatus: string;
-  items: string[];
-  allergies: string;
   name: string;
   phone: string;
   email: string;
-  contactMethod: string;
-  comments: string;
   pickupDate: string;
   pickupTime: string;
+  answers: OrderAnswer[];
   status: "new" | "confirmed" | "completed" | "cancelled";
 };

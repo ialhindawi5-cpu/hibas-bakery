@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import OrderForm from "../components/OrderForm";
-import { getSettings, getMenu } from "../lib/content";
+import { getSettings, getMenu, getQuestions } from "../lib/content";
 
 export const metadata: Metadata = {
   title: "Order",
@@ -10,9 +10,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function OrderPage() {
-  const [settings, menu] = await Promise.all([
+  const [settings, menu, questions] = await Promise.all([
     getSettings(),
     getMenu({ activeOnly: true }),
+    getQuestions({ activeOnly: true }),
   ]);
 
   const menuOptions = menu.map((m) => m.name);
@@ -38,6 +39,7 @@ export default async function OrderPage() {
       <section>
         <div className="container">
           <OrderForm
+            questions={questions}
             menuOptions={menuOptions}
             pickup={settings.pickup}
             phoneDisplay={settings.phoneDisplay}

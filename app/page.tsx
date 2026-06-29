@@ -23,7 +23,7 @@ export default async function Home() {
         <span className="hero-blob blob-3" aria-hidden />
         <div className="container hero-inner">
           <div className="hero-logo-wrap">
-            <Logo size={132} hasLogo={logo.hasLogo} src={logo.src} className="hero-logo" />
+            <Logo size={150} hasLogo={logo.hasLogo} src={logo.src} className="hero-logo" />
           </div>
           <p className="eyebrow">Fresh · Homemade · Made to order</p>
           <h1>{settings.heroTitle}</h1>
