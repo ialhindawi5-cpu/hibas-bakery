@@ -9,6 +9,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [openId, setOpenId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,11 +52,16 @@ export default function AdminOrders() {
     }
   };
 
+  const summary = (o: Order) => {
+    const items = o.answers.find((a) => /order|item/i.test(a.label))?.value;
+    return items || o.phone || "Click to view full submission";
+  };
+
   return (
     <>
       <h1 className="admin-h1">Orders</h1>
       <p className="admin-sub">
-        Order requests submitted through the website. New orders are also emailed to you.
+        Click an order to see everything the customer submitted. New orders are also emailed to you.
       </p>
 
       <div className="admin-actions" style={{ marginBottom: 18 }}>
@@ -77,46 +83,77 @@ export default function AdminOrders() {
         </div>
       )}
 
-      {orders.map((o) => (
-        <div className="order-card" key={o.id}>
-          <div className="order-head">
-            <div>
-              <span className="order-name">{o.name || "Order"}</span>{" "}
-              <span className={`badge ${o.status}`}>{o.status}</span>
-            </div>
-            <span className="order-meta">
-              #{o.id} · {fmtDate(o.createdAt)}
-            </span>
-          </div>
-
-          <div className="order-grid">
-            {o.answers
-              .filter((a) => a.value && a.value.trim())
-              .map((a, i) => (
-                <div key={i}>
-                  <b>{a.label}:</b> {a.value}
-                </div>
-              ))}
-          </div>
-
-          <div className="admin-actions">
-            <select
-              value={o.status}
-              onChange={(e) => setStatus(o.id, e.target.value as Order["status"])}
-              style={{ padding: "8px 10px", borderRadius: 9, border: "1px solid var(--border)" }}
+      {orders.map((o) => {
+        const open = openId === o.id;
+        const filled = o.answers.filter((a) => a.value && a.value.trim());
+        return (
+          <div className="order-card" key={o.id}>
+            {/* Clickable header */}
+            <button
+              type="button"
+              className="order-toggle"
+              onClick={() => setOpenId(open ? null : o.id)}
+              aria-expanded={open}
             >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <button className="admin-btn-danger" onClick={() => remove(o.id)}>
-              Delete
+              <div>
+                <span className="order-name">{o.name || "Order"}</span>{" "}
+                <span className={`badge ${o.status}`}>{o.status}</span>
+                {!open && <div className="order-summary-line">{summary(o)}</div>}
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div className="order-meta">
+                  #{o.id} · {fmtDate(o.createdAt)}
+                </div>
+                <div className="order-chevron">{open ? "▴ Hide" : "▾ View"}</div>
+              </div>
             </button>
+
+            {/* Expanded detail */}
+            {open && (
+              <div className="order-detail">
+                {filled.length === 0 ? (
+                  <p className="order-meta">
+                    No detailed answers were saved for this order (it may predate the order-form
+                    system).
+                  </p>
+                ) : (
+                  <dl className="order-dl">
+                    {filled.map((a, i) => (
+                      <div className="order-dl-row" key={i}>
+                        <dt>{a.label}</dt>
+                        <dd>{a.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+
+                <div className="admin-actions" style={{ marginTop: 16 }}>
+                  <label style={{ fontWeight: 600, marginRight: 4 }}>Status:</label>
+                  <select
+                    value={o.status}
+                    onChange={(e) => setStatus(o.id, e.target.value as Order["status"])}
+                    style={{ padding: "8px 10px", borderRadius: 9, border: "1px solid var(--border)" }}
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  {o.email && (
+                    <a className="admin-btn-sec" href={`mailto:${o.email}`}>
+                      Email customer
+                    </a>
+                  )}
+                  <button className="admin-btn-danger" onClick={() => remove(o.id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }
