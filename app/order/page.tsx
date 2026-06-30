@@ -43,6 +43,8 @@ export default async function OrderPage() {
             menuOptions={menuOptions}
             pickup={settings.pickup}
             phoneDisplay={settings.phoneDisplay}
+            successTitle={settings.orderSuccessTitle}
+            successMessage={settings.orderSuccessMessage}
           />
         </div>
       </section>

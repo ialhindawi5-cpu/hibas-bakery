@@ -13,6 +13,8 @@ export type Settings = {
   aboutTitle: string;
   aboutBody: string;
   footerText: string;
+  orderSuccessTitle: string;
+  orderSuccessMessage: string;
 };
 
 export type MenuItem = {

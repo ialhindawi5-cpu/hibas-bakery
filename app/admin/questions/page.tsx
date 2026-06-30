@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { Question, QuestionType, QuestionRole } from "@/app/lib/types";
+import SettingsFields from "../components/SettingsFields";
 
 const TYPES: { value: QuestionType; label: string }[] = [
   { value: "text", label: "Short text" },
@@ -130,6 +131,20 @@ export default function AdminQuestions() {
       </p>
 
       {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
+
+      {/* Confirmation message shown after a customer submits */}
+      <SettingsFields
+        title="Confirmation message (after submitting)"
+        fields={[
+          { key: "orderSuccessTitle", label: "Title" },
+          {
+            key: "orderSuccessMessage",
+            label: "Message",
+            textarea: true,
+            hint: "The phone number is added automatically after this text.",
+          },
+        ]}
+      />
 
       {/* Add new question */}
       <div className="admin-card">

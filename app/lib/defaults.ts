@@ -18,6 +18,9 @@ export const DEFAULT_SETTINGS: Settings = {
     "Every order is baked fresh, by hand, using simple ingredients and recipes passed down and perfected over the years. From fudgy chocolate crinkles to naturally leavened sourdough, we put care into every batch.",
   footerText:
     "Fresh, homemade cookies, Arab desserts, cheesecake, and sourdough breads — baked to order for pickup.",
+  orderSuccessTitle: "Thank you! Your order request has been sent.",
+  orderSuccessMessage:
+    "We'll contact you shortly about details and availability.",
 };
 
 export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [

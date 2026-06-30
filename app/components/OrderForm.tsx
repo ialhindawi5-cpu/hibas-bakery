@@ -10,11 +10,15 @@ export default function OrderForm({
   menuOptions,
   pickup,
   phoneDisplay,
+  successTitle,
+  successMessage,
 }: {
   questions: Question[];
   menuOptions: string[];
   pickup: string;
   phoneDisplay: string;
+  successTitle: string;
+  successMessage: string;
 }) {
   const initial: Values = {};
   for (const q of questions) {
@@ -98,10 +102,9 @@ export default function OrderForm({
     return (
       <div className="form-card">
         <div className="success" role="status">
-          <strong>Thank you! Your order request has been sent.</strong>
+          <strong>{successTitle}</strong>
           <br />
-          We&apos;ll contact you shortly about details and availability. For anything urgent,
-          call <strong>{phoneDisplay}</strong>.
+          {successMessage} For anything urgent, call <strong>{phoneDisplay}</strong>.
         </div>
       </div>
     );
