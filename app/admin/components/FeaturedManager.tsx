@@ -8,6 +8,13 @@ export default function FeaturedManager() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
 
+  // Add-new-favourite form state
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileKey, setFileKey] = useState(0);
+  const [adding, setAdding] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -23,6 +30,40 @@ export default function FeaturedManager() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setAdding(true);
+    try {
+      const res = await fetch("/api/admin/menu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description, featured: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNote({ type: "err", msg: data.error || "Failed to add item" });
+        return;
+      }
+      let created: MenuItem = data;
+      if (file) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const up = await fetch(`/api/admin/menu/${data.id}/image`, { method: "POST", body: fd });
+        const ud = await up.json().catch(() => ({}));
+        if (up.ok) created = { ...data, image: ud.image };
+      }
+      setItems((prev) => [...prev, created]);
+      setName("");
+      setDescription("");
+      setFile(null);
+      setFileKey((k) => k + 1);
+      setNote({ type: "ok", msg: `Added "${created.name}" to the carousel.` });
+    } finally {
+      setAdding(false);
+    }
+  }
 
   async function toggle(item: MenuItem, featured: boolean) {
     setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, featured } : i)));
@@ -48,6 +89,41 @@ export default function FeaturedManager() {
         the home page. {count} selected.
       </p>
       {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
+
+      {/* Add a new favourite */}
+      <form
+        onSubmit={add}
+        style={{ borderBottom: "1px solid var(--border)", paddingBottom: 18, marginBottom: 18 }}
+      >
+        <div className="admin-field">
+          <label>Add a new favourite — name</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Pistachio Baklava"
+          />
+        </div>
+        <div className="admin-field">
+          <label>Description</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+        <div className="admin-field">
+          <label>Photo (optional)</label>
+          <input
+            key={fileKey}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+          <span className="hint-note">
+            JPG, PNG or WebP, up to 5 MB. It will also be added to your Menu.
+          </span>
+        </div>
+        <button className="admin-btn" disabled={adding}>
+          {adding ? "Adding…" : "Add to carousel"}
+        </button>
+      </form>
+
       {loading ? (
         <p className="order-meta">Loading…</p>
       ) : (
