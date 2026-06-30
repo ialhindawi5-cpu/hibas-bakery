@@ -181,7 +181,7 @@ export default function AdminQuestions() {
           </div>
           {hasOptions(draft.type) && (
             <div className="admin-field">
-              <label>Options (one per line)</label>
+              <label>Options (one per line — start a line with &quot;## &quot; for a category heading)</label>
               <textarea
                 value={draftOptions}
                 onChange={(e) => setDraftOptions(e.target.value)}
@@ -251,7 +251,7 @@ export default function AdminQuestions() {
             </div>
             {hasOptions(q.type) && (
               <div className="admin-field">
-                <label>Options (one per line)</label>
+                <label>Options (one per line — start a line with &quot;## &quot; for a category heading)</label>
                 <textarea
                   value={q.options.join("\n")}
                   onChange={(e) =>

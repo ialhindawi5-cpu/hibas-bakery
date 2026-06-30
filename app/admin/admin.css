@@ -313,6 +313,28 @@
   margin-top: 14px;
   padding-top: 14px;
 }
+.order-total {
+  display: inline-block;
+  margin-left: 8px;
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.order-total-row {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--bg-soft);
+  border-radius: 10px;
+  font-size: 1.05rem;
+}
+.order-total-row strong {
+  color: var(--accent-2);
+  font-size: 1.15rem;
+}
 .order-dl {
   display: flex;
   flex-direction: column;

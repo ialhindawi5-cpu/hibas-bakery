@@ -52,6 +52,16 @@ export default function AdminOrders() {
     }
   };
 
+  // Sum every "$<amount>" found across the order's answers (prices live in the option text).
+  const orderTotal = (o: Order): number => {
+    let total = 0;
+    for (const a of o.answers) {
+      const matches = Array.from(a.value.matchAll(/\$\s*(\d+(?:\.\d{1,2})?)/g));
+      for (const m of matches) total += parseFloat(m[1]);
+    }
+    return total;
+  };
+
   const summary = (o: Order) => {
     const items = o.answers.find((a) => /order|item/i.test(a.label))?.value;
     return items || o.phone || "Click to view full submission";
@@ -86,6 +96,7 @@ export default function AdminOrders() {
       {orders.map((o) => {
         const open = openId === o.id;
         const filled = o.answers.filter((a) => a.value && a.value.trim());
+        const total = orderTotal(o);
         return (
           <div className="order-card" key={o.id}>
             {/* Clickable header */}
@@ -98,6 +109,7 @@ export default function AdminOrders() {
               <div>
                 <span className="order-name">{o.name || "Order"}</span>{" "}
                 <span className={`badge ${o.status}`}>{o.status}</span>
+                {total > 0 && <span className="order-total">${total.toFixed(2)}</span>}
                 {!open && <div className="order-summary-line">{summary(o)}</div>}
               </div>
               <div style={{ textAlign: "right" }}>
@@ -125,6 +137,12 @@ export default function AdminOrders() {
                       </div>
                     ))}
                   </dl>
+                )}
+
+                {total > 0 && (
+                  <div className="order-total-row">
+                    Order total: <strong>${total.toFixed(2)}</strong>
+                  </div>
                 )}
 
                 <div className="admin-actions" style={{ marginTop: 16 }}>

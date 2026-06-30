@@ -130,16 +130,22 @@ export default function OrderForm({
 
             {(q.type === "menu" || q.type === "checkbox") && (
               <div className="options">
-                {optionsFor(q).map((o) => (
-                  <label className="opt" key={o}>
-                    <input
-                      type="checkbox"
-                      checked={Array.isArray(v) && v.includes(o)}
-                      onChange={() => toggleMulti(q.qkey, o)}
-                    />
-                    {o}
-                  </label>
-                ))}
+                {optionsFor(q).map((o) =>
+                  o.startsWith("## ") ? (
+                    <div className="opt-group" key={o}>
+                      {o.slice(3)}
+                    </div>
+                  ) : (
+                    <label className="opt" key={o}>
+                      <input
+                        type="checkbox"
+                        checked={Array.isArray(v) && v.includes(o)}
+                        onChange={() => toggleMulti(q.qkey, o)}
+                      />
+                      {o}
+                    </label>
+                  )
+                )}
               </div>
             )}
 

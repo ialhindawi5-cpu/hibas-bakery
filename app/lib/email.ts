@@ -32,10 +32,18 @@ export async function sendOrderEmail(
 
   const rows = order.answers.filter((a) => a.value && a.value.trim().length > 0);
 
+  let total = 0;
+  for (const a of order.answers) {
+    const matches = a.value.match(/\$\s*\d+(?:\.\d{1,2})?/g) || [];
+    for (const m of matches) total += parseFloat(m.replace(/[^\d.]/g, ""));
+  }
+  const totalLine = total > 0 ? `\n\nORDER TOTAL: $${total.toFixed(2)}` : "";
+
   const text =
     `New order request from the ${siteName} website\n` +
     `----------------------------------------\n` +
     rows.map((a) => `${a.label}: ${a.value}`).join("\n") +
+    totalLine +
     `\n\nReceived: ${order.createdAt}`;
 
   const html = `
@@ -54,6 +62,13 @@ export async function sendOrderEmail(
           )
           .join("")}
       </table>
+      ${
+        total > 0
+          ? `<p style="margin:16px 0 0;font-size:18px"><strong>Order total: <span style="color:#c2607a">$${total.toFixed(
+              2
+            )}</span></strong></p>`
+          : ""
+      }
     </div>`;
 
   await t.sendMail({
