@@ -76,6 +76,16 @@ async function init() {
   )`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS answers jsonb NOT NULL DEFAULT '[]'`;
 
+  await sql`CREATE TABLE IF NOT EXISTS messages (
+    id serial PRIMARY KEY,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    name text NOT NULL DEFAULT '',
+    email text NOT NULL DEFAULT '',
+    phone text NOT NULL DEFAULT '',
+    message text NOT NULL DEFAULT '',
+    is_read boolean NOT NULL DEFAULT false
+  )`;
+
   await sql`CREATE TABLE IF NOT EXISTS questions (
     id serial PRIMARY KEY,
     qkey text NOT NULL,

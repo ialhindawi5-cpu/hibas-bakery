@@ -86,3 +86,42 @@ export async function sendOrderEmail(
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+export async function sendContactEmail(
+  msg: { name: string; email: string; phone: string; message: string },
+  to: string,
+  siteName: string
+): Promise<{ sent: boolean }> {
+  const t = getTransport();
+  if (!t) return { sent: false };
+
+  const text =
+    `New message from the ${siteName} website\n` +
+    `----------------------------------------\n` +
+    `Name: ${msg.name}\n` +
+    `Email: ${msg.email || "Not provided"}\n` +
+    `Phone: ${msg.phone || "Not provided"}\n\n` +
+    `${msg.message}`;
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#3a2b1f">
+      <h2 style="color:#c2607a;margin:0 0 4px">New contact message</h2>
+      <p style="color:#8a7461;margin:0 0 16px">via the ${siteName} website</p>
+      <p><strong>Name:</strong> ${escapeHtml(msg.name)}<br/>
+      <strong>Email:</strong> ${escapeHtml(msg.email || "Not provided")}<br/>
+      <strong>Phone:</strong> ${escapeHtml(msg.phone || "Not provided")}</p>
+      <p style="white-space:pre-wrap;background:#faf0ec;padding:14px;border-radius:8px">${escapeHtml(
+        msg.message
+      )}</p>
+    </div>`;
+
+  await t.sendMail({
+    from: `"${siteName}" <${process.env.GMAIL_USER}>`,
+    to,
+    replyTo: msg.email || undefined,
+    subject: `New message — ${msg.name || "Website"}`,
+    text,
+    html,
+  });
+  return { sent: true };
+}
