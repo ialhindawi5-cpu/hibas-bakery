@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import SiteHeader from "./components/SiteHeader";
 import SiteFooter from "./components/SiteFooter";
+import ScrollReveal from "./components/ScrollReveal";
 import { getSettings, getLogoInfo } from "./lib/content";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -44,11 +45,17 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.classList.add('reveal-enabled')",
+          }}
+        />
         <SiteHeader
           siteName={settings.siteName}
           hasLogo={logo.hasLogo}
           logoSrc={logo.src}
         />
+        <ScrollReveal />
         <main>{children}</main>
         <SiteFooter settings={settings} />
       </body>
