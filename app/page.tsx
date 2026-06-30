@@ -1,15 +1,13 @@
 import Link from "next/link";
-import Logo from "./components/Logo";
-import { getSettings, getMenu, getGallery, getLogoInfo } from "./lib/content";
+import { getSettings, getMenu, getGallery } from "./lib/content";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [settings, menu, gallery, logo] = await Promise.all([
+  const [settings, menu, gallery] = await Promise.all([
     getSettings(),
     getMenu({ activeOnly: true }),
     getGallery(),
-    getLogoInfo(),
   ]);
 
   const featured = menu.filter((m) => m.image).slice(0, 3);
@@ -22,9 +20,6 @@ export default async function Home() {
         <span className="hero-blob blob-2" aria-hidden />
         <span className="hero-blob blob-3" aria-hidden />
         <div className="container hero-inner">
-          <div className="hero-logo-wrap">
-            <Logo size={150} hasLogo={logo.hasLogo} src={logo.src} className="hero-logo" />
-          </div>
           <p className="eyebrow">Fresh · Homemade · Made to order</p>
           <h1>{settings.heroTitle}</h1>
           <p className="sub">{settings.heroSubtitle}</p>
