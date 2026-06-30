@@ -382,6 +382,12 @@
   margin-bottom: 12px;
   background: #fff;
 }
+.hint-note {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 6px;
+}
 .menu-admin-thumb {
   width: 64px;
   height: 64px;

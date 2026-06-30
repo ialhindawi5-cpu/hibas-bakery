@@ -48,6 +48,8 @@ async function init() {
     await sql`ALTER TABLE menu_items ADD COLUMN featured boolean NOT NULL DEFAULT false`;
     await sql`UPDATE menu_items SET featured = true WHERE image IS NOT NULL`;
   }
+  await sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_data text`;
+  await sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_mime text`;
   await sql`CREATE TABLE IF NOT EXISTS gallery (
     id serial PRIMARY KEY,
     src text NOT NULL,

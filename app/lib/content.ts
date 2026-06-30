@@ -96,6 +96,31 @@ export async function deleteMenuItem(id: number): Promise<void> {
   await sql`DELETE FROM menu_items WHERE id=${id}`;
 }
 
+export async function setMenuImage(id: number, base64: string, mime: string): Promise<string> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  const url = `/api/menu-image/${id}?v=${Date.now()}`;
+  await sql`UPDATE menu_items SET image_data=${base64}, image_mime=${mime}, image=${url} WHERE id=${id}`;
+  return url;
+}
+
+export async function getMenuImage(id: number): Promise<{ data: Buffer; mime: string } | null> {
+  if (!sql) return null;
+  await ensureDb();
+  const rows = await sql`SELECT image_data, image_mime FROM menu_items WHERE id=${id}`;
+  if (!rows.length || !rows[0].image_data) return null;
+  return {
+    data: Buffer.from(rows[0].image_data, "base64"),
+    mime: rows[0].image_mime || "image/jpeg",
+  };
+}
+
+export async function clearMenuImage(id: number): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`UPDATE menu_items SET image_data=NULL, image_mime=NULL, image=NULL WHERE id=${id}`;
+}
+
 /* ---------------- Gallery ---------------- */
 
 export async function getGallery(): Promise<GalleryImage[]> {

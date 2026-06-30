@@ -21,6 +21,8 @@ export default function AdminMenu() {
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [addFile, setAddFile] = useState<File | null>(null);
+  const [addKey, setAddKey] = useState(0);
   const [adding, setAdding] = useState(false);
 
   const load = useCallback(async () => {
@@ -57,6 +59,30 @@ export default function AdminMenu() {
     );
   }
 
+  async function uploadImage(item: MenuItem, file: File) {
+    setNote({ type: "ok", msg: `Uploading photo for "${item.name}"…` });
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`/api/admin/menu/${item.id}/image`, { method: "POST", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      patch(item.id, "image", data.image);
+      setNote({ type: "ok", msg: `Photo updated for "${item.name}"` });
+    } else {
+      setNote({ type: "err", msg: data.error || "Upload failed" });
+    }
+  }
+
+  async function removeImage(item: MenuItem) {
+    const res = await fetch(`/api/admin/menu/${item.id}/image`, { method: "DELETE" });
+    if (res.ok) {
+      patch(item.id, "image", null);
+      setNote({ type: "ok", msg: `Photo removed from "${item.name}"` });
+    } else {
+      setNote({ type: "err", msg: "Failed to remove photo" });
+    }
+  }
+
   async function remove(item: MenuItem) {
     if (!confirm(`Delete "${item.name}"?`)) return;
     const res = await fetch(`/api/admin/menu/${item.id}`, { method: "DELETE" });
@@ -79,13 +105,23 @@ export default function AdminMenu() {
         body: JSON.stringify(draft),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setItems((prev) => [...prev, data]);
-        setDraft(emptyDraft);
-        setNote({ type: "ok", msg: `Added "${data.name}"` });
-      } else {
+      if (!res.ok) {
         setNote({ type: "err", msg: data.error || "Failed to add item" });
+        return;
       }
+      let created: MenuItem = data;
+      if (addFile) {
+        const fd = new FormData();
+        fd.append("file", addFile);
+        const up = await fetch(`/api/admin/menu/${data.id}/image`, { method: "POST", body: fd });
+        const ud = await up.json().catch(() => ({}));
+        if (up.ok) created = { ...data, image: ud.image };
+      }
+      setItems((prev) => [...prev, created]);
+      setDraft(emptyDraft);
+      setAddFile(null);
+      setAddKey((k) => k + 1);
+      setNote({ type: "ok", msg: `Added "${created.name}"` });
     } finally {
       setAdding(false);
     }
@@ -95,7 +131,7 @@ export default function AdminMenu() {
     <>
       <h1 className="admin-h1">Menu</h1>
       <p className="admin-sub">
-        Add, edit, reorder, or hide items. Use the order field to control how items appear.
+        Add, edit, reorder, or hide items. Upload a photo for each item — no links needed.
       </p>
 
       {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
@@ -137,12 +173,14 @@ export default function AdminMenu() {
             />
           </div>
           <div className="admin-field">
-            <label>Image URL (optional)</label>
+            <label>Photo (optional)</label>
             <input
-              value={draft.image || ""}
-              onChange={(e) => setDraft({ ...draft, image: e.target.value })}
-              placeholder="/images/your-photo.jpg or https://…"
+              key={addKey}
+              type="file"
+              accept="image/*"
+              onChange={(e) => setAddFile(e.target.files?.[0] || null)}
             />
+            <span className="hint-note">JPG, PNG or WebP, up to 5 MB.</span>
           </div>
           <button className="admin-btn" disabled={adding}>
             {adding ? "Adding…" : "Add item"}
@@ -195,11 +233,30 @@ export default function AdminMenu() {
                 />
               </div>
               <div className="admin-field">
-                <label>Image URL</label>
+                <label>Photo</label>
                 <input
-                  value={item.image || ""}
-                  onChange={(e) => patch(item.id, "image", e.target.value || null)}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) uploadImage(item, f);
+                    e.target.value = "";
+                  }}
                 />
+                <span className="hint-note">
+                  {item.image ? "Choose a file to replace the current photo." : "No photo yet."}
+                  {" "}JPG, PNG or WebP, up to 5 MB.
+                </span>
+                {item.image && (
+                  <button
+                    type="button"
+                    className="admin-btn-sec"
+                    style={{ marginTop: 8 }}
+                    onClick={() => removeImage(item)}
+                  >
+                    Remove photo
+                  </button>
+                )}
               </div>
               <div className="admin-actions">
                 <label
