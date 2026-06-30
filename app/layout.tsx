@@ -57,7 +57,7 @@ export default async function RootLayout({
         />
         <ScrollReveal />
         <main>{children}</main>
-        <SiteFooter settings={settings} />
+        <SiteFooter settings={settings} hasLogo={logo.hasLogo} logoSrc={logo.src} />
       </body>
     </html>
   );

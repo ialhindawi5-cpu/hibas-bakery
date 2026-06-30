@@ -1,16 +1,28 @@
 import Link from "next/link";
+import Logo from "./Logo";
 import type { Settings } from "../lib/types";
 
-export default function SiteFooter({ settings }: { settings: Settings }) {
+export default function SiteFooter({
+  settings,
+  hasLogo = false,
+  logoSrc = null,
+}: {
+  settings: Settings;
+  hasLogo?: boolean;
+  logoSrc?: string | null;
+}) {
   const year = new Date().getFullYear();
   return (
     <footer className="site-footer">
       <div className="container">
         <div className="footer-grid">
           <div>
-            <h4 className="serif">{settings.siteName}</h4>
+            <div className="footer-brand">
+              <Logo size={52} hasLogo={hasLogo} src={logoSrc} className="footer-logo" />
+              <h4 className="serif">{settings.siteName}</h4>
+            </div>
             <p>{settings.footerText}</p>
-            <p className="footer-hours">🕐 {settings.hours}</p>
+            <p className="footer-hours">{settings.hours}</p>
           </div>
           <div>
             <h4>Explore</h4>

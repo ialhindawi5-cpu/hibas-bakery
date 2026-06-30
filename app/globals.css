@@ -1160,6 +1160,20 @@ footer.site-footer {
   font-size: 1.1rem;
   margin-bottom: 12px;
 }
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.footer-brand h4 {
+  margin-bottom: 0;
+}
+.footer-logo {
+  border-radius: 12px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
 .footer-grid p,
 .footer-grid a {
   color: var(--muted);
