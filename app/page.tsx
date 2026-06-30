@@ -40,6 +40,24 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Announcement ticker */}
+      {settings.announcements && settings.announcements.length > 0 && (
+        <div className="ticker" aria-label="Announcements">
+          <div className="ticker-track">
+            {[...settings.announcements, ...settings.announcements].map((a, i) => (
+              <span
+                className="ticker-item"
+                key={i}
+                aria-hidden={i >= settings.announcements.length}
+              >
+                <span className="ticker-star">★</span>
+                {a}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Featured */}
       {marquee.length > 0 && (
         <section>

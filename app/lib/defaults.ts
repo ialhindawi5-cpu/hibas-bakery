@@ -24,6 +24,12 @@ export const DEFAULT_SETTINGS: Settings = {
   pickupSlots: ["11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"],
   blockedDates: [],
   mapQuery: "45.2888539,-75.9247394",
+  announcements: [
+    "We're closed on Sundays",
+    "Fresh · Homemade · Made to order",
+    "Order ahead for the freshest treats",
+    "Pickup at 267 Aquilo Crescent",
+  ],
 };
 
 export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [

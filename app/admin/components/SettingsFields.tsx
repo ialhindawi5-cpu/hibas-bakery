@@ -7,6 +7,7 @@ export type FieldDef = {
   key: keyof Settings;
   label: string;
   textarea?: boolean;
+  list?: boolean;
   hint?: string;
 };
 
@@ -64,7 +65,20 @@ export default function SettingsFields({
       {fields.map((f) => (
         <div className="admin-field" key={f.key}>
           <label>{f.label}</label>
-          {f.textarea ? (
+          {f.list ? (
+            <textarea
+              value={Array.isArray(settings[f.key]) ? (settings[f.key] as string[]).join("\n") : ""}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  [f.key]: e.target.value
+                    .split("\n")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                })
+              }
+            />
+          ) : f.textarea ? (
             <textarea
               value={settings[f.key]}
               onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })}

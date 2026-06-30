@@ -21,6 +21,18 @@ export default function AdminHome() {
         ]}
       />
 
+      <SettingsFields
+        title="Announcement bar (scrolling)"
+        fields={[
+          {
+            key: "announcements",
+            label: "Announcements (one per line)",
+            list: true,
+            hint: "Scrolls across the home page under the hero. e.g. We're closed on Sundays",
+          },
+        ]}
+      />
+
       <FeaturedManager />
 
       <GalleryManager />
