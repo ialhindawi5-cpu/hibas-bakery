@@ -26,43 +26,7 @@ export default async function ContactPage() {
 
       <section>
         <div className="container">
-          <div className="contact-grid">
-            <div className="contact-item">
-              <div className="ic">📞</div>
-              <div className="label">Phone</div>
-              <div className="value">
-                <a href={`tel:${settings.phoneLink}`}>{settings.phoneDisplay}</a>
-              </div>
-            </div>
-            <div className="contact-item">
-              <div className="ic">📷</div>
-              <div className="label">Instagram</div>
-              <div className="value">
-                <a href={settings.instagram} target="_blank" rel="noopener noreferrer">
-                  {settings.instagramHandle}
-                </a>
-              </div>
-            </div>
-            <div className="contact-item">
-              <div className="ic">✉️</div>
-              <div className="label">Email</div>
-              <div className="value">
-                <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>
-              </div>
-            </div>
-            <div className="contact-item">
-              <div className="ic">📍</div>
-              <div className="label">Pickup location</div>
-              <div className="value">{settings.pickup}</div>
-            </div>
-            <div className="contact-item">
-              <div className="ic">🕐</div>
-              <div className="label">Working hours</div>
-              <div className="value">{settings.hours}</div>
-            </div>
-          </div>
-
-          <div className="map-wrap" style={{ marginTop: 28 }}>
+          <div className="map-wrap">
             <iframe
               title="Pickup location map"
               src={`https://www.google.com/maps?q=${encodeURIComponent(
