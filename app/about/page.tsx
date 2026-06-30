@@ -8,36 +8,23 @@ export const metadata: Metadata = {
     "The story behind our bakery — homemade cookies, Arab desserts, cheesecake, and sourdough breads, baked fresh to order in small batches.",
 };
 
-const values = [
-  {
-    icon: "💝",
-    title: "Made with love",
-    text: "Every order is baked by hand with care — never rushed, never mass-produced.",
-  },
-  {
-    icon: "🌾",
-    title: "Real ingredients",
-    text: "Simple, quality ingredients and recipes perfected over the years.",
-  },
-  {
-    icon: "🧁",
-    title: "Small batches",
-    text: "We bake to order so everything reaches you at its freshest.",
-  },
-];
-
 export const dynamic = "force-dynamic";
 
 export default async function AboutPage() {
-  const settings = await getSettings();
+  const s = await getSettings();
+
+  const values = (s.aboutValues || []).map((v) => {
+    const parts = v.split("|").map((p) => p.trim());
+    return { icon: parts[0] || "✓", title: parts[1] || "", text: parts[2] || "" };
+  });
 
   return (
     <>
       <div className="page-header">
         <div className="container">
-          <p className="eyebrow">Our story</p>
-          <h1>About {settings.siteName}</h1>
-          <p>Homemade with love, one batch at a time.</p>
+          <p className="eyebrow">{s.aboutEyebrow}</p>
+          <h1>{s.aboutHeadline}</h1>
+          <p>{s.aboutIntro}</p>
         </div>
       </div>
 
@@ -45,54 +32,51 @@ export default async function AboutPage() {
         <div className="container about">
           <div className="about-media">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/sourdough.jpg" alt="Freshly baked sourdough loaf" loading="lazy" />
+            <img src={s.aboutImage} alt={s.aboutHeading} loading="lazy" />
           </div>
           <div>
             <p className="eyebrow" style={{ color: "var(--accent-2)", letterSpacing: 2 }}>
-              Who we are
+              {s.aboutSectionEyebrow}
             </p>
-            <h2 className="serif">Baked fresh, from our home to yours</h2>
-            <p>{settings.aboutBody}</p>
-            <p>
-              Everything is made to order, so each treat is as fresh as it can
-              be. We believe the best baking is honest and unhurried — real
-              ingredients, small batches, and a lot of heart.
-            </p>
-            <ul className="feature-list">
-              <li>Handmade to order — never sitting on a shelf</li>
-              <li>Cookies, Arab sweets, cheesecake &amp; breads</li>
-              <li>Convenient pickup at {settings.pickup}</li>
-            </ul>
+            <h2 className="serif">{s.aboutHeading}</h2>
+            <p>{s.aboutBody}</p>
+            {s.aboutBody2 && <p>{s.aboutBody2}</p>}
+            {s.aboutFeatures && s.aboutFeatures.length > 0 && (
+              <ul className="feature-list">
+                {s.aboutFeatures.map((f, i) => (
+                  <li key={i}>{f}</li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </section>
 
-      <section className="alt-bg">
-        <div className="container">
-          <div className="section-head">
-            <p className="eyebrow">What we believe</p>
-            <h2>Our promise</h2>
+      {values.length > 0 && (
+        <section className="alt-bg">
+          <div className="container">
+            <div className="section-head">
+              <p className="eyebrow">{s.promiseEyebrow}</p>
+              <h2>{s.promiseHeading}</h2>
+            </div>
+            <div className="steps">
+              {values.map((v, i) => (
+                <div className="step" key={i}>
+                  <div className="num">{v.icon}</div>
+                  <h3>{v.title}</h3>
+                  <p>{v.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="steps">
-            {values.map((v) => (
-              <div className="step" key={v.title}>
-                <div className="num">{v.icon}</div>
-                <h3>{v.title}</h3>
-                <p>{v.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section>
         <div className="container">
           <div className="cta-band">
-            <h2>Come taste the difference</h2>
-            <p>
-              Browse the menu and place your order request — we&apos;ll bake it
-              fresh, just for you.
-            </p>
+            <h2>{s.aboutCtaHeading}</h2>
+            <p>{s.aboutCtaText}</p>
             <Link className="btn btn-ghost" href="/order">
               Place an order
             </Link>

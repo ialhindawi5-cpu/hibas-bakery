@@ -16,6 +16,29 @@ export const DEFAULT_SETTINGS: Settings = {
   aboutTitle: "Hiba's Bakery",
   aboutBody:
     "Every order is baked fresh, by hand, using simple ingredients and recipes passed down and perfected over the years. From fudgy chocolate crinkles to naturally leavened sourdough, we put care into every batch.",
+  aboutEyebrow: "Our story",
+  aboutHeadline: "About Us",
+  aboutIntro: "Homemade with love, one batch at a time.",
+  aboutSectionEyebrow: "Who we are",
+  aboutHeading: "Baked fresh, from our home to yours",
+  aboutBody2:
+    "Everything is made to order, so each treat is as fresh as it can be. We believe the best baking is honest and unhurried — real ingredients, small batches, and a lot of heart.",
+  aboutFeatures: [
+    "Handmade to order — never sitting on a shelf",
+    "Cookies, Arab sweets, cheesecake & breads",
+    "Convenient pickup at 267 Aquilo Crescent",
+  ],
+  promiseEyebrow: "What we believe",
+  promiseHeading: "Our promise",
+  aboutValues: [
+    "💝 | Made with love | Every order is baked by hand with care — never rushed, never mass-produced.",
+    "🌾 | Real ingredients | Simple, quality ingredients and recipes perfected over the years.",
+    "🧁 | Small batches | We bake to order so everything reaches you at its freshest.",
+  ],
+  aboutImage: "/images/sourdough.jpg",
+  aboutCtaHeading: "Come taste the difference",
+  aboutCtaText:
+    "Browse the menu and place your order request — we'll bake it fresh, just for you.",
   footerText:
     "Fresh, homemade cookies, Arab desserts, cheesecake, and sourdough breads — baked to order for pickup.",
   orderSuccessTitle: "Thank you! Your order request has been sent.",

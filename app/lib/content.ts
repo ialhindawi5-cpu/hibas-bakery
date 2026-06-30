@@ -272,3 +272,32 @@ export async function clearLogo(): Promise<void> {
   await ensureDb();
   await sql`UPDATE settings SET logo_data=NULL, logo_mime=NULL WHERE id = 1`;
 }
+
+/* ---------------- About image ---------------- */
+
+export async function setAboutImage(base64: string, mime: string): Promise<string> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  const url = `/api/about-image?v=${Date.now()}`;
+  await sql`UPDATE settings SET about_image_data=${base64}, about_image_mime=${mime} WHERE id = 1`;
+  await updateSettings({ aboutImage: url });
+  return url;
+}
+
+export async function getAboutImageData(): Promise<{ data: Buffer; mime: string } | null> {
+  if (!sql) return null;
+  await ensureDb();
+  const rows = await sql`SELECT about_image_data, about_image_mime FROM settings WHERE id = 1`;
+  if (!rows.length || !rows[0].about_image_data) return null;
+  return {
+    data: Buffer.from(rows[0].about_image_data, "base64"),
+    mime: rows[0].about_image_mime || "image/jpeg",
+  };
+}
+
+export async function clearAboutImage(): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`UPDATE settings SET about_image_data=NULL, about_image_mime=NULL WHERE id = 1`;
+  await updateSettings({ aboutImage: "/images/sourdough.jpg" });
+}
