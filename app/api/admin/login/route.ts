@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   // Throttle login attempts to slow brute-force: 8 per 10 minutes per IP.
-  const rl = rateLimit(`login:${clientIp(req)}`, 8, 10 * 60 * 1000);
+  const rl = await rateLimit(`login:${clientIp(req)}`, 8, 10 * 60 * 1000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "Too many login attempts. Please wait a few minutes and try again." },
