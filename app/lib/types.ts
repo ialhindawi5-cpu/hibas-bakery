@@ -7,6 +7,7 @@ export type Settings = {
   instagram: string;
   instagramHandle: string;
   pickup: string;
+  hours: string;
   heroTitle: string;
   heroSubtitle: string;
   aboutTitle: string;

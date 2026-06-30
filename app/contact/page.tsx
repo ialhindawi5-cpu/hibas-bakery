@@ -55,6 +55,11 @@ export default async function ContactPage() {
               <div className="label">Pickup location</div>
               <div className="value">{settings.pickup}</div>
             </div>
+            <div className="contact-item">
+              <div className="ic">🕐</div>
+              <div className="label">Working hours</div>
+              <div className="value">{settings.hours}</div>
+            </div>
           </div>
 
           <div className="cta-band" style={{ marginTop: 44 }}>

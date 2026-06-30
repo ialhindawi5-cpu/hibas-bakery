@@ -12,6 +12,7 @@ const FIELDS: { key: keyof Settings; label: string; textarea?: boolean; hint?: s
   { key: "instagram", label: "Instagram URL" },
   { key: "instagramHandle", label: "Instagram handle" },
   { key: "pickup", label: "Pickup address" },
+  { key: "hours", label: "Working hours", hint: "e.g. Monday – Saturday · 11am – 7pm" },
   { key: "heroTitle", label: "Homepage headline" },
   { key: "heroSubtitle", label: "Homepage subtitle", textarea: true },
   { key: "aboutTitle", label: "About heading" },

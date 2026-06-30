@@ -1088,6 +1088,20 @@ footer.site-footer {
   display: grid;
   gap: 8px;
 }
+.footer-ig {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.footer-ig svg {
+  flex-shrink: 0;
+}
+.footer-hours {
+  margin-top: 12px;
+  font-weight: 600;
+  color: var(--text) !important;
+  font-size: 0.92rem;
+}
 .footer-bottom {
   border-top: 1px solid var(--border);
   padding-top: 18px;

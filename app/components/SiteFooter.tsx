@@ -13,6 +13,7 @@ export default function SiteFooter({ settings }: { settings: Settings }) {
               Fresh, homemade cookies, Arab desserts, cheesecake, and sourdough
               breads — baked to order for pickup at {settings.pickup}.
             </p>
+            <p className="footer-hours">🕐 {settings.hours}</p>
           </div>
           <div>
             <h4>Explore</h4>
@@ -29,8 +30,28 @@ export default function SiteFooter({ settings }: { settings: Settings }) {
             <div className="links">
               <a href={`tel:${settings.phoneLink}`}>{settings.phoneDisplay}</a>
               <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>
-              <a href={settings.instagram} target="_blank" rel="noopener noreferrer">
-                Instagram {settings.instagramHandle}
+              <a
+                href={settings.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-ig"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                </svg>
+                {settings.instagramHandle}
               </a>
             </div>
           </div>

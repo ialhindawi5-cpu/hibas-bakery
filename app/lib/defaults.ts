@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS: Settings = {
   instagram: "https://instagram.com/hibas_bakery_",
   instagramHandle: "@hibas_bakery_",
   pickup: "267 Aquilo Crescent",
+  hours: "Monday – Saturday · 11am – 7pm",
   heroTitle: "Baked with love, just for you",
   heroSubtitle:
     "Cookies, Arab desserts, cheesecake, and sourdough breads — handmade in small batches and ready for pickup.",
