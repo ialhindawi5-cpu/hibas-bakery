@@ -250,6 +250,34 @@
   color: var(--muted);
   font-weight: 600;
 }
+.pw-wrap {
+  position: relative;
+}
+.pw-wrap input {
+  width: 100%;
+  padding-right: 46px;
+}
+.pw-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.pw-toggle:hover {
+  color: var(--accent-2);
+  background: var(--bg-soft);
+}
 .order-toggle {
   width: 100%;
   background: transparent;
