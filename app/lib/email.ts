@@ -92,7 +92,7 @@ export async function sendOrderEmail(
   const text =
     `New order request from the ${siteName} website\n` +
     `----------------------------------------\n` +
-    rows.map((a) => `${a.label}: ${a.value}`).join("\n") +
+    rows.map((a) => `${a.label}: ${a.value.replace(/, /g, "\n  - ")}`).join("\n") +
     totalLine +
     `\n\nReceived: ${order.createdAt}`;
 
@@ -108,7 +108,7 @@ export async function sendOrderEmail(
                 a.label
               )}</td><td style="padding:8px 10px;border:1px solid #eee">${escapeHtml(
                 a.value
-              )}</td></tr>`
+              ).replace(/, /g, "<br>")}</td></tr>`
           )
           .join("")}
       </table>
