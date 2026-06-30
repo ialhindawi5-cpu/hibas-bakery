@@ -79,6 +79,49 @@ export default function FeaturedManager() {
     );
   }
 
+  function patch(id: number, field: keyof MenuItem, value: unknown) {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
+  }
+
+  async function save(item: MenuItem) {
+    const res = await fetch(`/api/admin/menu/${item.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(item),
+    });
+    const data = await res.json().catch(() => ({}));
+    setNote(
+      res.ok
+        ? { type: "ok", msg: `Saved "${item.name}"` }
+        : { type: "err", msg: data.error || "Save failed" }
+    );
+  }
+
+  async function uploadImage(item: MenuItem, f: File) {
+    setNote({ type: "ok", msg: `Uploading photo for "${item.name}"…` });
+    const fd = new FormData();
+    fd.append("file", f);
+    const res = await fetch(`/api/admin/menu/${item.id}/image`, { method: "POST", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      patch(item.id, "image", data.image);
+      setNote({ type: "ok", msg: `Photo updated for "${item.name}"` });
+    } else {
+      setNote({ type: "err", msg: data.error || "Upload failed" });
+    }
+  }
+
+  async function removeItem(item: MenuItem) {
+    if (!confirm(`Delete "${item.name}"? This removes it from the carousel and the menu.`)) return;
+    const res = await fetch(`/api/admin/menu/${item.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+      setNote({ type: "ok", msg: `Deleted "${item.name}"` });
+    } else {
+      setNote({ type: "err", msg: "Delete failed" });
+    }
+  }
+
   const count = items.filter((i) => i.featured).length;
 
   return (
@@ -136,19 +179,51 @@ export default function FeaturedManager() {
               <div className="menu-admin-thumb">{item.emoji}</div>
             )}
             <div style={{ flex: 1 }}>
-              <strong>{item.name}</strong>
-              {!item.active && <span className="order-meta"> · hidden from menu</span>}
+              <div className="admin-field">
+                <label>Name</label>
+                <input value={item.name} onChange={(e) => patch(item.id, "name", e.target.value)} />
+              </div>
+              <div className="admin-field">
+                <label>Description</label>
+                <textarea
+                  value={item.description}
+                  onChange={(e) => patch(item.id, "description", e.target.value)}
+                />
+              </div>
+              <div className="admin-field">
+                <label>Photo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) uploadImage(item, f);
+                    e.target.value = "";
+                  }}
+                />
+                <span className="hint-note">
+                  {item.image ? "Choose a file to replace the current photo." : "No photo yet."}
+                </span>
+              </div>
+              <div className="admin-actions">
+                <label
+                  style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 600 }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={item.featured}
+                    onChange={(e) => toggle(item, e.target.checked)}
+                  />
+                  In carousel
+                </label>
+                <button className="admin-btn" onClick={() => save(item)}>
+                  Save
+                </button>
+                <button className="admin-btn-danger" onClick={() => removeItem(item)}>
+                  Delete
+                </button>
+              </div>
             </div>
-            <label
-              style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 600, whiteSpace: "nowrap" }}
-            >
-              <input
-                type="checkbox"
-                checked={item.featured}
-                onChange={(e) => toggle(item, e.target.checked)}
-              />
-              In carousel
-            </label>
           </div>
         ))
       )}
