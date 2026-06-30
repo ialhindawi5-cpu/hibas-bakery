@@ -50,6 +50,8 @@ async function init() {
   }
   await sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_data text`;
   await sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_mime text`;
+  await sql`ALTER TABLE gallery ADD COLUMN IF NOT EXISTS image_data text`;
+  await sql`ALTER TABLE gallery ADD COLUMN IF NOT EXISTS image_mime text`;
   await sql`CREATE TABLE IF NOT EXISTS gallery (
     id serial PRIMARY KEY,
     src text NOT NULL,

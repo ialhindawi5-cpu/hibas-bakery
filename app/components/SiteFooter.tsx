@@ -9,10 +9,7 @@ export default function SiteFooter({ settings }: { settings: Settings }) {
         <div className="footer-grid">
           <div>
             <h4 className="serif">{settings.siteName}</h4>
-            <p>
-              Fresh, homemade cookies, Arab desserts, cheesecake, and sourdough
-              breads — baked to order for pickup at {settings.pickup}.
-            </p>
+            <p>{settings.footerText}</p>
             <p className="footer-hours">🕐 {settings.hours}</p>
           </div>
           <div>

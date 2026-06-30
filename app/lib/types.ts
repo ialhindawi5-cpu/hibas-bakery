@@ -12,6 +12,7 @@ export type Settings = {
   heroSubtitle: string;
   aboutTitle: string;
   aboutBody: string;
+  footerText: string;
 };
 
 export type MenuItem = {

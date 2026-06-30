@@ -5,11 +5,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const NAV = [
-  { href: "/admin/orders", label: "Orders", icon: "📋" },
-  { href: "/admin/menu", label: "Menu", icon: "🧁" },
-  { href: "/admin/featured", label: "Home Featured", icon: "⭐" },
-  { href: "/admin/questions", label: "Order Form", icon: "📝" },
-  { href: "/admin/settings", label: "Settings & Logo", icon: "⚙️" },
+  { href: "/admin/home", label: "Home Page" },
+  { href: "/admin/about", label: "About Page" },
+  { href: "/admin/menu", label: "Menu" },
+  { href: "/admin/questions", label: "Order Form" },
+  { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/branding", label: "Logo & Name" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -40,7 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               href={n.href}
               className={pathname.startsWith(n.href) ? "active" : ""}
             >
-              {n.icon} {n.label}
+              {n.label}
             </Link>
           ))}
         </nav>

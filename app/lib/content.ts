@@ -131,6 +131,53 @@ export async function getGallery(): Promise<GalleryImage[]> {
   return rows.map((r: any) => ({ id: r.id, src: r.src, alt: r.alt, sortOrder: r.sort_order }));
 }
 
+export async function addGalleryImage(
+  base64: string,
+  mime: string,
+  alt: string
+): Promise<GalleryImage> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  const max = await sql`SELECT COALESCE(MAX(sort_order),0)::int AS m FROM gallery`;
+  const sortOrder = max[0].m + 1;
+  const ins = await sql`INSERT INTO gallery (src, alt, sort_order, image_data, image_mime)
+    VALUES ('', ${alt}, ${sortOrder}, ${base64}, ${mime}) RETURNING id`;
+  const id = ins[0].id as number;
+  const src = `/api/gallery-image/${id}?v=${Date.now()}`;
+  await sql`UPDATE gallery SET src=${src} WHERE id=${id}`;
+  return { id, src, alt, sortOrder };
+}
+
+export async function updateGalleryImage(
+  id: number,
+  patch: { alt?: string; sortOrder?: number }
+): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  if (patch.alt !== undefined) await sql`UPDATE gallery SET alt=${patch.alt} WHERE id=${id}`;
+  if (patch.sortOrder !== undefined)
+    await sql`UPDATE gallery SET sort_order=${patch.sortOrder} WHERE id=${id}`;
+}
+
+export async function deleteGalleryImage(id: number): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`DELETE FROM gallery WHERE id=${id}`;
+}
+
+export async function getGalleryImageData(
+  id: number
+): Promise<{ data: Buffer; mime: string } | null> {
+  if (!sql) return null;
+  await ensureDb();
+  const rows = await sql`SELECT image_data, image_mime FROM gallery WHERE id=${id}`;
+  if (!rows.length || !rows[0].image_data) return null;
+  return {
+    data: Buffer.from(rows[0].image_data, "base64"),
+    mime: rows[0].image_mime || "image/jpeg",
+  };
+}
+
 /* ---------------- Questions (order form builder) ---------------- */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

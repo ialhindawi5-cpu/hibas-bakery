@@ -74,6 +74,27 @@ export default function AdminOrders() {
         Click an order to see everything the customer submitted. New orders are also emailed to you.
       </p>
 
+      {orders.length > 0 && (
+        <div className="profit-summary">
+          <div>
+            <span className="profit-label">Total from all orders</span>
+            <span className="profit-value">
+              ${orders.reduce((sum, o) => sum + orderTotal(o), 0).toFixed(2)}
+            </span>
+          </div>
+          <div>
+            <span className="profit-label">New (unconfirmed)</span>
+            <span className="profit-value sm">
+              $
+              {orders
+                .filter((o) => o.status === "new")
+                .reduce((sum, o) => sum + orderTotal(o), 0)
+                .toFixed(2)}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="admin-actions" style={{ marginBottom: 18 }}>
         <button className="admin-btn-sec" onClick={load}>
           ↻ Refresh

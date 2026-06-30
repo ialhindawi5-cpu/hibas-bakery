@@ -16,6 +16,8 @@ export const DEFAULT_SETTINGS: Settings = {
   aboutTitle: "Hiba's Bakery",
   aboutBody:
     "Every order is baked fresh, by hand, using simple ingredients and recipes passed down and perfected over the years. From fudgy chocolate crinkles to naturally leavened sourdough, we put care into every batch.",
+  footerText:
+    "Fresh, homemade cookies, Arab desserts, cheesecake, and sourdough breads — baked to order for pickup.",
 };
 
 export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [
