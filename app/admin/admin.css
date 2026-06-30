@@ -403,16 +403,69 @@
   border: 1px solid var(--border);
   padding: 6px;
 }
-@media (max-width: 720px) {
+@media (max-width: 760px) {
   .admin-shell {
     flex-direction: column;
   }
   .admin-side {
-    width: auto;
+    width: 100%;
     height: auto;
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 14px;
+  }
+  .admin-brand {
+    margin-bottom: 0;
+    font-size: 1.05rem;
+    flex: 1 1 auto;
+    order: 1;
+  }
+  .admin-brand span {
+    display: inline;
+    margin: 0 0 0 6px;
+    font-size: 0.6rem;
+  }
+  .admin-side-foot {
+    order: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    border-top: none;
+    padding-top: 0;
+  }
+  .admin-side-foot a {
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+  .admin-side-foot button {
+    padding: 7px 12px;
+    font-size: 0.82rem;
+  }
+  .admin-side nav {
+    order: 3;
+    flex: 1 1 100%;
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+  .admin-side nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 8px 13px;
+    font-size: 0.88rem;
   }
   .admin-main {
-    padding: 20px;
+    padding: 20px 16px;
+    max-width: 100%;
+  }
+  .admin-h1 {
+    font-size: 1.5rem;
   }
 }
