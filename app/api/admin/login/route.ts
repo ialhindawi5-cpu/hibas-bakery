@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { checkCredentials, createSession, SESSION_COOKIE, authConfigured } from "@/app/lib/auth";
+import { createSession, SESSION_COOKIE } from "@/app/lib/auth";
+import { verifyAdminCredentials } from "@/app/lib/users";
 import { rateLimit, clientIp } from "@/app/lib/rateLimit";
 
 export const runtime = "nodejs";
@@ -14,13 +15,6 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!authConfigured()) {
-    return NextResponse.json(
-      { error: "Admin login is not configured. Set ADMIN_USERNAME and ADMIN_PASSWORD." },
-      { status: 503 }
-    );
-  }
-
   let body: { username?: string; password?: string };
   try {
     body = await req.json();
@@ -28,11 +22,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  if (!checkCredentials(String(body.username || ""), String(body.password || ""))) {
+  const username = String(body.username || "").trim();
+  if (!(await verifyAdminCredentials(username, String(body.password || "")))) {
     return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
   }
 
-  const token = await createSession(String(body.username));
+  const token = await createSession(username);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,

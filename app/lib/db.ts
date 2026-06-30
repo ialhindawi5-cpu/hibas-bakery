@@ -5,6 +5,7 @@ import {
   DEFAULT_GALLERY,
   DEFAULT_QUESTIONS,
 } from "./defaults";
+import { hashPassword } from "./password";
 
 const url = process.env.DATABASE_URL;
 
@@ -86,6 +87,20 @@ async function init() {
     sort_order int NOT NULL DEFAULT 0,
     active boolean NOT NULL DEFAULT true
   )`;
+
+  await sql`CREATE TABLE IF NOT EXISTS admin_users (
+    id serial PRIMARY KEY,
+    username text UNIQUE NOT NULL,
+    password_hash text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+  // Seed the env-configured admin as the first user (so existing login keeps working).
+  const au = await sql`SELECT count(*)::int AS c FROM admin_users`;
+  if (au[0].c === 0 && process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD) {
+    await sql`INSERT INTO admin_users (username, password_hash)
+      VALUES (${process.env.ADMIN_USERNAME}, ${hashPassword(process.env.ADMIN_PASSWORD)})
+      ON CONFLICT (username) DO NOTHING`;
+  }
 
   const s = await sql`SELECT id FROM settings WHERE id = 1`;
   if (s.length === 0) {
