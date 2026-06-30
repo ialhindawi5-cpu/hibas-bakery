@@ -6,7 +6,7 @@ import SiteFooter from "./components/SiteFooter";
 import { getSettings, getLogoInfo } from "./lib/content";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const s = await getSettings();
+  const [s, logo] = await Promise.all([getSettings(), getLogoInfo()]);
   return {
     title: {
       default: s.siteName,
@@ -14,6 +14,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: `Fresh-baked cookies, Arab desserts, cheesecake, and sourdough breads. Order online from ${s.siteName} for pickup at ${s.pickup}.`,
     metadataBase: new URL("https://example.com"),
+    icons: logo.hasLogo
+      ? { icon: "/api/logo", shortcut: "/api/logo", apple: "/api/logo" }
+      : undefined,
     openGraph: {
       title: s.siteName,
       description:
