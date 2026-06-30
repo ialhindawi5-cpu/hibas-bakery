@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createOrder, type NewOrder } from "@/app/lib/orders";
 import { getSettings, getQuestions } from "@/app/lib/content";
 import { sendOrderEmail } from "@/app/lib/email";
+import { rateLimit, clientIp } from "@/app/lib/rateLimit";
 import type { Order, OrderAnswer } from "@/app/lib/types";
 
 export const runtime = "nodejs";
@@ -9,6 +10,15 @@ export const runtime = "nodejs";
 type IncomingAnswer = { qkey?: string; label?: string; value?: unknown };
 
 export async function POST(req: Request) {
+  // Limit order spam: 6 submissions per 10 minutes per IP.
+  const rl = rateLimit(`order:${clientIp(req)}`, 6, 10 * 60 * 1000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "You've sent several requests already. Please wait a few minutes before trying again." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+    );
+  }
+
   let body: { answers?: IncomingAnswer[] };
   try {
     body = await req.json();

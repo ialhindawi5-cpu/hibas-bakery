@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
 import { checkCredentials, createSession, SESSION_COOKIE, authConfigured } from "@/app/lib/auth";
+import { rateLimit, clientIp } from "@/app/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  // Throttle login attempts to slow brute-force: 8 per 10 minutes per IP.
+  const rl = rateLimit(`login:${clientIp(req)}`, 8, 10 * 60 * 1000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many login attempts. Please wait a few minutes and try again." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+    );
+  }
+
   if (!authConfigured()) {
     return NextResponse.json(
       { error: "Admin login is not configured. Set ADMIN_USERNAME and ADMIN_PASSWORD." },
