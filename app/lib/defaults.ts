@@ -21,6 +21,8 @@ export const DEFAULT_SETTINGS: Settings = {
   orderSuccessTitle: "Thank you! Your order request has been sent.",
   orderSuccessMessage:
     "We'll contact you shortly about details and availability.",
+  pickupSlots: ["11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"],
+  blockedDates: [],
 };
 
 export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [

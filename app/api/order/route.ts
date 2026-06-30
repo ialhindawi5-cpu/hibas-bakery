@@ -51,6 +51,26 @@ export async function POST(req: Request) {
     if (q.role !== "none") role[q.role] = value;
   }
 
+  const settings = await getSettings();
+
+  // Enforce admin-set availability (can't be bypassed client-side).
+  if (role.date && (settings.blockedDates || []).includes(role.date)) {
+    return NextResponse.json(
+      { error: "That pickup date isn't available. Please choose another date." },
+      { status: 400 }
+    );
+  }
+  if (
+    role.time &&
+    (settings.pickupSlots || []).length > 0 &&
+    !(settings.pickupSlots || []).includes(role.time)
+  ) {
+    return NextResponse.json(
+      { error: "That pickup time isn't available. Please choose a listed time slot." },
+      { status: 400 }
+    );
+  }
+
   const newOrder: NewOrder = {
     name: role.name || "",
     phone: role.phone || "",
@@ -59,8 +79,6 @@ export async function POST(req: Request) {
     pickupTime: role.time || "",
     answers,
   };
-
-  const settings = await getSettings();
 
   let saved: Order | null = null;
   try {

@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Question } from "../lib/types";
 
 type Values = Record<string, string | string[]>;
+
+function fmtTime(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  if (isNaN(h)) return t;
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m || 0).padStart(2, "0")} ${ampm}`;
+}
 
 export default function OrderForm({
   questions,
@@ -12,6 +20,8 @@ export default function OrderForm({
   phoneDisplay,
   successTitle,
   successMessage,
+  pickupSlots,
+  blockedDates,
 }: {
   questions: Question[];
   menuOptions: string[];
@@ -19,7 +29,18 @@ export default function OrderForm({
   phoneDisplay: string;
   successTitle: string;
   successMessage: string;
+  pickupSlots: string[];
+  blockedDates: string[];
 }) {
+  // Earliest selectable date (today; same-day pickup allowed). Set after mount
+  // to avoid a server/client hydration mismatch.
+  const [today, setToday] = useState("");
+  useEffect(() => {
+    const d = new Date();
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    setToday(local.toISOString().slice(0, 10));
+  }, []);
+
   const initial: Values = {};
   for (const q of questions) {
     initial[q.qkey] = q.type === "checkbox" || q.type === "menu" ? [] : "";
@@ -57,7 +78,18 @@ export default function OrderForm({
   function validate(): Record<string, string> {
     const e: Record<string, string> = {};
     for (const q of questions) {
-      if (q.required && isEmpty(q)) e[q.qkey] = "This field is required.";
+      if (q.required && isEmpty(q)) {
+        e[q.qkey] = "This field is required.";
+        continue;
+      }
+      if (q.type === "date" && !isEmpty(q)) {
+        const val = String(values[q.qkey]);
+        if (today && val < today) {
+          e[q.qkey] = "Please choose today or a later date.";
+        } else if (blockedDates.includes(val)) {
+          e[q.qkey] = "That date isn't available — please choose another.";
+        }
+      }
     }
     return e;
   }
@@ -177,7 +209,41 @@ export default function OrderForm({
               />
             )}
 
-            {["text", "email", "tel", "date", "time"].includes(q.type) && (
+            {q.type === "date" && (
+              <input
+                id={q.qkey}
+                type="date"
+                min={today || undefined}
+                value={typeof v === "string" ? v : ""}
+                onChange={(e) => set(q.qkey, e.target.value)}
+              />
+            )}
+
+            {q.type === "time" && pickupSlots.length > 0 && (
+              <select
+                id={q.qkey}
+                value={typeof v === "string" ? v : ""}
+                onChange={(e) => set(q.qkey, e.target.value)}
+              >
+                <option value="">Select a time…</option>
+                {pickupSlots.map((s) => (
+                  <option key={s} value={s}>
+                    {fmtTime(s)}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {q.type === "time" && pickupSlots.length === 0 && (
+              <input
+                id={q.qkey}
+                type="time"
+                value={typeof v === "string" ? v : ""}
+                onChange={(e) => set(q.qkey, e.target.value)}
+              />
+            )}
+
+            {["text", "email", "tel"].includes(q.type) && (
               <input
                 id={q.qkey}
                 type={q.type}

@@ -15,6 +15,8 @@ export type Settings = {
   footerText: string;
   orderSuccessTitle: string;
   orderSuccessMessage: string;
+  pickupSlots: string[];
+  blockedDates: string[];
 };
 
 export type MenuItem = {

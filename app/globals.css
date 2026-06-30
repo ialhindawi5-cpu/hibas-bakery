@@ -994,6 +994,7 @@ input[type="email"],
 input[type="tel"],
 input[type="date"],
 input[type="time"],
+.form-card select,
 textarea {
   width: 100%;
   padding: 12px 14px;
@@ -1005,6 +1006,7 @@ textarea {
   font-family: inherit;
 }
 input:focus,
+.form-card select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent);

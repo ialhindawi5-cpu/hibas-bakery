@@ -45,6 +45,8 @@ export default async function OrderPage() {
             phoneDisplay={settings.phoneDisplay}
             successTitle={settings.orderSuccessTitle}
             successMessage={settings.orderSuccessMessage}
+            pickupSlots={settings.pickupSlots || []}
+            blockedDates={settings.blockedDates || []}
           />
         </div>
       </section>
