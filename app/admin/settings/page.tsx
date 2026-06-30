@@ -22,6 +22,11 @@ export default function AdminSettings() {
           { key: "instagram", label: "Instagram URL" },
           { key: "instagramHandle", label: "Instagram handle" },
           { key: "pickup", label: "Pickup address" },
+          {
+            key: "mapQuery",
+            label: "Map location",
+            hint: "Coordinates (e.g. 45.2888539,-75.9247394) or an address — shown as a map on the Contact page.",
+          },
           { key: "hours", label: "Working hours", hint: "e.g. Monday – Saturday · 11am – 7pm" },
         ]}
       />

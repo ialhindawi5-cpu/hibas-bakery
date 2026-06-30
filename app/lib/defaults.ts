@@ -23,6 +23,7 @@ export const DEFAULT_SETTINGS: Settings = {
     "We'll contact you shortly about details and availability.",
   pickupSlots: ["11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"],
   blockedDates: [],
+  mapQuery: "45.2888539,-75.9247394",
 };
 
 export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [

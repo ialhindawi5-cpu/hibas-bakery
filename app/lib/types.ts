@@ -17,6 +17,7 @@ export type Settings = {
   orderSuccessMessage: string;
   pickupSlots: string[];
   blockedDates: string[];
+  mapQuery: string;
 };
 
 export type MenuItem = {

@@ -62,6 +62,28 @@ export default async function ContactPage() {
             </div>
           </div>
 
+          <div className="map-wrap" style={{ marginTop: 28 }}>
+            <iframe
+              title="Pickup location map"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(
+                settings.mapQuery
+              )}&z=16&output=embed`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
+          <p style={{ textAlign: "center", marginTop: 14 }}>
+            <a
+              className="btn btn-ghost"
+              href={`https://www.google.com/maps?q=${encodeURIComponent(settings.mapQuery)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open in Google Maps
+            </a>
+          </p>
+
           <div className="cta-band" style={{ marginTop: 44 }}>
             <h2>Hungry yet?</h2>
             <p>Browse the menu and place your order request online.</p>

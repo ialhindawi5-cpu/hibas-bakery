@@ -9,6 +9,7 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
+  "frame-src 'self' https://www.google.com https://maps.google.com",
   "object-src 'none'",
   "img-src 'self' data: blob:",
   "script-src 'self' 'unsafe-inline'",
