@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: `Fresh-baked cookies, Arab desserts, cheesecake, and sourdough breads. Order online from ${s.siteName} for pickup at ${s.pickup}.`,
     metadataBase: new URL("https://example.com"),
     icons: logo.hasLogo
-      ? { icon: "/api/logo", shortcut: "/api/logo", apple: "/api/logo" }
+      ? { icon: "/api/favicon", shortcut: "/api/favicon", apple: "/api/favicon" }
       : undefined,
     openGraph: {
       title: s.siteName,
