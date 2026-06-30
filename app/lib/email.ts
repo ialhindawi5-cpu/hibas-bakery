@@ -2,6 +2,13 @@ import nodemailer from "nodemailer";
 import type { Order } from "./types";
 
 export function emailConfigured(): boolean {
+  return (
+    Boolean(process.env.RESEND_API_KEY) ||
+    Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD)
+  );
+}
+
+function gmailConfigured(): boolean {
   return Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
 }
 
@@ -9,7 +16,7 @@ export function emailConfigured(): boolean {
 let transporter: any = null;
 
 function getTransport() {
-  if (!emailConfigured()) return null;
+  if (!gmailConfigured()) return null;
   if (!transporter) {
     transporter = nodemailer.createTransport({
       service: "gmail",
@@ -22,13 +29,56 @@ function getTransport() {
   return transporter;
 }
 
+// Sends via Resend (just an API key — no Gmail setup) when RESEND_API_KEY is
+// present; otherwise falls back to Gmail SMTP. Throws on failure.
+async function deliver(opts: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  replyTo?: string;
+  siteName: string;
+}): Promise<void> {
+  if (process.env.RESEND_API_KEY) {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || `${opts.siteName} <onboarding@resend.dev>`,
+        to: [opts.to],
+        subject: opts.subject,
+        text: opts.text,
+        html: opts.html,
+        reply_to: opts.replyTo || undefined,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`Resend error ${res.status}: ${await res.text().catch(() => "")}`);
+    }
+    return;
+  }
+
+  const t = getTransport();
+  if (!t) throw new Error("email-not-configured");
+  await t.sendMail({
+    from: `"${opts.siteName}" <${process.env.GMAIL_USER}>`,
+    to: opts.to,
+    replyTo: opts.replyTo || undefined,
+    subject: opts.subject,
+    text: opts.text,
+    html: opts.html,
+  });
+}
+
 export async function sendOrderEmail(
   order: Order,
   to: string,
   siteName: string
 ): Promise<{ sent: boolean; reason?: string }> {
-  const t = getTransport();
-  if (!t) return { sent: false, reason: "email-not-configured" };
+  if (!emailConfigured()) return { sent: false, reason: "email-not-configured" };
 
   const rows = order.answers.filter((a) => a.value && a.value.trim().length > 0);
 
@@ -71,13 +121,13 @@ export async function sendOrderEmail(
       }
     </div>`;
 
-  await t.sendMail({
-    from: `"${siteName}" <${process.env.GMAIL_USER}>`,
+  await deliver({
     to,
-    replyTo: order.email || undefined,
     subject: `New order — ${order.name || "Website"}`,
     text,
     html,
+    replyTo: order.email || undefined,
+    siteName,
   });
 
   return { sent: true };
@@ -92,8 +142,7 @@ export async function sendContactEmail(
   to: string,
   siteName: string
 ): Promise<{ sent: boolean }> {
-  const t = getTransport();
-  if (!t) return { sent: false };
+  if (!emailConfigured()) return { sent: false };
 
   const text =
     `New message from the ${siteName} website\n` +
@@ -115,13 +164,13 @@ export async function sendContactEmail(
       )}</p>
     </div>`;
 
-  await t.sendMail({
-    from: `"${siteName}" <${process.env.GMAIL_USER}>`,
+  await deliver({
     to,
-    replyTo: msg.email || undefined,
     subject: `New message — ${msg.name || "Website"}`,
     text,
     html,
+    replyTo: msg.email || undefined,
+    siteName,
   });
   return { sent: true };
 }
