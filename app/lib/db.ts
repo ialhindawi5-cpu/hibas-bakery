@@ -38,8 +38,16 @@ async function init() {
     image text,
     emoji text NOT NULL DEFAULT '🍰',
     sort_order int NOT NULL DEFAULT 0,
-    active boolean NOT NULL DEFAULT true
+    active boolean NOT NULL DEFAULT true,
+    featured boolean NOT NULL DEFAULT false
   )`;
+  // Add the `featured` column to pre-existing databases, and seed it once.
+  const featCol = await sql`SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'menu_items' AND column_name = 'featured'`;
+  if (featCol.length === 0) {
+    await sql`ALTER TABLE menu_items ADD COLUMN featured boolean NOT NULL DEFAULT false`;
+    await sql`UPDATE menu_items SET featured = true WHERE image IS NOT NULL`;
+  }
   await sql`CREATE TABLE IF NOT EXISTS gallery (
     id serial PRIMARY KEY,
     src text NOT NULL,
@@ -83,8 +91,8 @@ async function init() {
   const m = await sql`SELECT count(*)::int AS c FROM menu_items`;
   if (m[0].c === 0) {
     for (const it of DEFAULT_MENU) {
-      await sql`INSERT INTO menu_items (slug,name,description,image,emoji,sort_order,active)
-        VALUES (${it.slug},${it.name},${it.description},${it.image},${it.emoji},${it.sortOrder},${it.active})`;
+      await sql`INSERT INTO menu_items (slug,name,description,image,emoji,sort_order,active,featured)
+        VALUES (${it.slug},${it.name},${it.description},${it.image},${it.emoji},${it.sortOrder},${it.active},${it.featured})`;
     }
   }
 

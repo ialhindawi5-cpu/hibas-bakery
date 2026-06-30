@@ -13,6 +13,7 @@ const emptyDraft: Draft = {
   emoji: "🍰",
   sortOrder: 0,
   active: true,
+  featured: false,
 };
 
 export default function AdminMenu() {

@@ -40,6 +40,7 @@ function mapMenu(r: any): MenuItem {
     emoji: r.emoji,
     sortOrder: r.sort_order,
     active: r.active,
+    featured: r.featured ?? false,
   };
 }
 
@@ -55,11 +56,23 @@ export async function getMenu(opts?: { activeOnly?: boolean }): Promise<MenuItem
   return rows.map(mapMenu);
 }
 
+export async function getFeaturedMenu(): Promise<MenuItem[]> {
+  if (!sql) {
+    return DEFAULT_MENU.map((m, i) => ({ id: i + 1, ...m })).filter(
+      (m) => m.active && m.featured
+    );
+  }
+  await ensureDb();
+  const rows = await sql`SELECT * FROM menu_items WHERE active = true AND featured = true
+    ORDER BY sort_order, id`;
+  return rows.map(mapMenu);
+}
+
 export async function addMenuItem(item: Omit<MenuItem, "id">): Promise<MenuItem> {
   if (!sql) throw new Error("Database not configured");
   await ensureDb();
-  const rows = await sql`INSERT INTO menu_items (slug,name,description,image,emoji,sort_order,active)
-    VALUES (${item.slug},${item.name},${item.description},${item.image},${item.emoji},${item.sortOrder},${item.active})
+  const rows = await sql`INSERT INTO menu_items (slug,name,description,image,emoji,sort_order,active,featured)
+    VALUES (${item.slug},${item.name},${item.description},${item.image},${item.emoji},${item.sortOrder},${item.active},${item.featured})
     RETURNING *`;
   return mapMenu(rows[0]);
 }
@@ -73,7 +86,7 @@ export async function updateMenuItem(id: number, patch: Partial<MenuItem>): Prom
   const n = { ...cur, ...patch };
   await sql`UPDATE menu_items SET
     slug=${n.slug}, name=${n.name}, description=${n.description}, image=${n.image},
-    emoji=${n.emoji}, sort_order=${n.sortOrder}, active=${n.active}
+    emoji=${n.emoji}, sort_order=${n.sortOrder}, active=${n.active}, featured=${n.featured}
     WHERE id=${id}`;
 }
 

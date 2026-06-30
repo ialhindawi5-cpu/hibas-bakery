@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { getSettings, getMenu, getGallery } from "./lib/content";
+import { getSettings, getFeaturedMenu, getGallery } from "./lib/content";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [settings, menu, gallery] = await Promise.all([
+  const [settings, featured, gallery] = await Promise.all([
     getSettings(),
-    getMenu({ activeOnly: true }),
+    getFeaturedMenu(),
     getGallery(),
   ]);
 
-  const featured = menu.filter((m) => m.image).slice(0, 3);
+  // Duplicate the list so the marquee can loop seamlessly.
+  const marquee = featured.length > 0 ? [...featured, ...featured] : [];
 
   return (
     <>
@@ -40,34 +41,49 @@ export default async function Home() {
       </section>
 
       {/* Featured */}
-      <section>
-        <div className="container">
-          <div className="section-head">
-            <p className="eyebrow">Our favourites</p>
-            <h2>Freshly baked treats</h2>
-            <p>A little taste of what comes out of our kitchen each week.</p>
+      {marquee.length > 0 && (
+        <section>
+          <div className="container">
+            <div className="section-head">
+              <p className="eyebrow">Our favourites</p>
+              <h2>Freshly baked treats</h2>
+              <p>A little taste of what comes out of our kitchen each week.</p>
+            </div>
           </div>
-          <div className="products">
-            {featured.map((item) => (
-              <article className="product" key={item.id}>
-                <div className="product-media">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.image as string} alt={item.name} loading="lazy" />
-                </div>
-                <div className="product-body">
-                  <h3>{item.name}</h3>
-                  <p>{item.description}</p>
-                </div>
-              </article>
-            ))}
+          <div className="marquee" aria-label="Featured treats">
+            <div
+              className="marquee-track"
+              style={{ animationDuration: `${Math.max(18, featured.length * 7)}s` }}
+            >
+              {marquee.map((item, i) => (
+                <article
+                  className="product marquee-card"
+                  key={`${item.id}-${i}`}
+                  aria-hidden={i >= featured.length}
+                >
+                  <div className="product-media">
+                    {item.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.image} alt={item.name} loading="lazy" />
+                    ) : (
+                      <div className="product-placeholder">{item.emoji}</div>
+                    )}
+                  </div>
+                  <div className="product-body">
+                    <h3>{item.name}</h3>
+                    <p>{item.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-          <div style={{ textAlign: "center", marginTop: 36 }}>
+          <div className="container" style={{ textAlign: "center", marginTop: 36 }}>
             <Link className="btn btn-ghost" href="/menu">
               See the full menu
             </Link>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* About */}
       <section className="alt-bg">

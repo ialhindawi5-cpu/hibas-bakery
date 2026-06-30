@@ -22,6 +22,7 @@ export type MenuItem = {
   emoji: string;
   sortOrder: number;
   active: boolean;
+  featured: boolean;
 };
 
 export type GalleryImage = {

@@ -32,6 +32,7 @@ export async function POST(req: Request) {
       emoji: String(b.emoji || "🍰"),
       sortOrder: typeof b.sortOrder === "number" ? b.sortOrder : maxOrder + 1,
       active: b.active !== false,
+      featured: Boolean(b.featured),
     });
     return NextResponse.json(item);
   } catch (e) {

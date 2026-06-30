@@ -27,6 +27,7 @@ export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [
     emoji: "🍪",
     sortOrder: 1,
     active: true,
+    featured: true,
   },
   {
     slug: "chocolate-chip-cookies",
@@ -37,6 +38,7 @@ export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [
     emoji: "🍫",
     sortOrder: 2,
     active: true,
+    featured: true,
   },
   {
     slug: "arab-desserts",
@@ -47,6 +49,7 @@ export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [
     emoji: "🥮",
     sortOrder: 3,
     active: true,
+    featured: true,
   },
   {
     slug: "cheesecake",
@@ -57,6 +60,7 @@ export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [
     emoji: "🍰",
     sortOrder: 4,
     active: true,
+    featured: false,
   },
   {
     slug: "sourdough",
@@ -67,6 +71,7 @@ export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [
     emoji: "🍞",
     sortOrder: 5,
     active: true,
+    featured: true,
   },
 ];
 
