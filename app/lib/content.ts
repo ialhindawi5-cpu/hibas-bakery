@@ -48,10 +48,24 @@ export async function saveDraft(patch: Partial<Settings>): Promise<Settings> {
   return next;
 }
 
-// Make the draft live.
+// Make the draft live. Before replacing, auto-save the outgoing live version
+// so there's always a rollback point (keeping the most recent 20 auto-saves).
 export async function publishSettings(): Promise<void> {
   if (!sql) throw new Error("Database not configured");
   await ensureDb();
+  const rows = await sql`SELECT data, draft FROM settings WHERE id = 1`;
+  if (rows.length && rows[0].draft) {
+    const outgoing = { ...DEFAULT_SETTINGS, ...(rows[0].data as Partial<Settings>) };
+    await sql`INSERT INTO settings_history (label, data)
+      VALUES (${"Auto-saved before publish"}, ${JSON.stringify(outgoing)}::jsonb)`;
+    await sql`DELETE FROM settings_history
+      WHERE label = 'Auto-saved before publish'
+      AND id NOT IN (
+        SELECT id FROM settings_history
+        WHERE label = 'Auto-saved before publish'
+        ORDER BY created_at DESC LIMIT 20
+      )`;
+  }
   await sql`UPDATE settings SET data = COALESCE(draft, data), draft = NULL WHERE id = 1`;
 }
 
