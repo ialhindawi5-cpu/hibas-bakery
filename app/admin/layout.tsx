@@ -1,6 +1,7 @@
 "use client";
 
 import "./admin.css";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import PublishBar from "./components/PublishBar";
@@ -21,6 +22,12 @@ const NAV = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the mobile menu on navigation.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   if (pathname === "/admin/login") {
     return <>{children}</>;
@@ -34,10 +41,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="admin-shell">
-      <aside className="admin-side">
-        <div className="admin-brand">
-          Bakery
-          <span>Admin Dashboard</span>
+      <aside className={`admin-side ${menuOpen ? "open" : ""}`}>
+        <div className="admin-side-top">
+          <div className="admin-brand">
+            Bakery
+            <span>Admin Dashboard</span>
+          </div>
+          <button
+            type="button"
+            className="admin-burger"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+          >
+            <span className={`burger ${menuOpen ? "is-open" : ""}`} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          </button>
         </div>
         <nav>
           {NAV.map((n) => (
@@ -45,6 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               key={n.href}
               href={n.href}
               className={pathname.startsWith(n.href) ? "active" : ""}
+              onClick={() => setMenuOpen(false)}
             >
               {n.label}
             </Link>

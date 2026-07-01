@@ -619,6 +619,26 @@
   border: 1px solid var(--border);
   padding: 6px;
 }
+/* Brand row + hamburger (hamburger hidden on desktop) */
+.admin-side-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.admin-burger {
+  display: none;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 @media (max-width: 760px) {
   .admin-shell {
     flex-direction: column;
@@ -629,53 +649,36 @@
     position: sticky;
     top: 0;
     z-index: 30;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 12px;
-    padding: 12px 14px;
+    padding: 12px 16px;
   }
   .admin-brand {
     margin-bottom: 0;
-    font-size: 1.05rem;
-    flex: 1 1 auto;
-    order: 1;
+    font-size: 1.1rem;
   }
   .admin-brand span {
     display: inline;
     margin: 0 0 0 6px;
-    font-size: 0.6rem;
+    font-size: 0.62rem;
   }
-  .admin-side-foot {
-    order: 2;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    border-top: none;
-    padding-top: 0;
+  .admin-burger {
+    display: flex;
   }
-  .admin-side-foot a {
-    font-size: 0.8rem;
-    white-space: nowrap;
+  /* Collapsed by default on mobile; shown when the menu is open */
+  .admin-side nav,
+  .admin-side .admin-side-foot {
+    display: none;
   }
-  .admin-side-foot button {
-    padding: 7px 12px;
-    font-size: 0.82rem;
+  .admin-side.open nav {
+    display: flex;
+    flex-direction: column;
+    margin-top: 14px;
   }
-  .admin-side nav {
-    order: 3;
-    flex: 1 1 100%;
-    flex-direction: row;
-    gap: 6px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px;
-  }
-  .admin-side nav a {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    padding: 8px 13px;
-    font-size: 0.88rem;
+  .admin-side.open .admin-side-foot {
+    display: flex;
+    flex-direction: column;
+    margin-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 14px;
   }
   .admin-main {
     padding: 20px 16px;
