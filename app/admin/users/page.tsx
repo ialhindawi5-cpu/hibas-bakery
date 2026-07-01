@@ -60,8 +60,8 @@ export default function AdminUsers() {
   }
 
   async function resetPassword(u: AdminUser) {
-    if (resetPw.length < 6) {
-      setNote({ type: "err", msg: "Password must be at least 6 characters." });
+    if (resetPw.length < 8) {
+      setNote({ type: "err", msg: "Password must be at least 8 characters." });
       return;
     }
     const res = await fetch(`/api/admin/users/${u.id}`, {
@@ -120,7 +120,7 @@ export default function AdminUsers() {
                 type="text"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="at least 6 characters"
+                placeholder="at least 8 characters"
                 autoComplete="new-password"
               />
             </div>

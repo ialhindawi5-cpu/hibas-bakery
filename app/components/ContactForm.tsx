@@ -7,6 +7,7 @@ export default function ContactForm() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [hp, setHp] = useState("");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -23,7 +24,7 @@ export default function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, message }),
+        body: JSON.stringify({ name, email, phone, message, hp }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -52,6 +53,16 @@ export default function ContactForm() {
 
   return (
     <form className="form-card" style={{ maxWidth: 640 }} onSubmit={submit} noValidate>
+      <input
+        type="text"
+        name="company"
+        value={hp}
+        onChange={(e) => setHp(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+      />
       {error && (
         <div className="error" style={{ marginBottom: 16, fontSize: "0.95rem" }}>
           {error}

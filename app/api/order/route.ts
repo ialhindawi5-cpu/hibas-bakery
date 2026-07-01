@@ -19,11 +19,16 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { answers?: IncomingAnswer[] };
+  let body: { answers?: IncomingAnswer[]; hp?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Honeypot: bots fill hidden fields. Pretend success without saving.
+  if (body.hp && body.hp.trim()) {
+    return NextResponse.json({ ok: true, saved: false, emailed: false });
   }
 
   const incoming = Array.isArray(body.answers) ? body.answers : [];

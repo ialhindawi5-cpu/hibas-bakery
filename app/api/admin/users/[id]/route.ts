@@ -8,8 +8,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const { id } = await params;
     const b = await req.json();
     const password = String(b.password || "");
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters" },
+        { status: 400 }
+      );
     }
     await resetAdminPassword(Number(id), password);
     return NextResponse.json({ ok: true });

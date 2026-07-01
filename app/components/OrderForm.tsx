@@ -47,6 +47,7 @@ export default function OrderForm({
   }
 
   const [values, setValues] = useState<Values>(initial);
+  const [hp, setHp] = useState(""); // honeypot — real users leave this empty
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -114,7 +115,7 @@ export default function OrderForm({
       const res = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, hp }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -144,6 +145,16 @@ export default function OrderForm({
 
   return (
     <form className="form-card" onSubmit={handleSubmit} noValidate>
+      <input
+        type="text"
+        name="company"
+        value={hp}
+        onChange={(e) => setHp(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+      />
       {serverError && (
         <div className="error" style={{ marginBottom: 16, fontSize: "0.95rem" }}>
           {serverError}
