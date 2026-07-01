@@ -33,6 +33,7 @@ async function init() {
   )`;
   await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_image_data text`;
   await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_image_mime text`;
+  await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS draft jsonb`;
   await sql`CREATE TABLE IF NOT EXISTS menu_items (
     id serial PRIMARY KEY,
     slug text NOT NULL,

@@ -29,7 +29,8 @@ export default function AboutImageEditor() {
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       setSrc(String(data.image));
-      setNote({ type: "ok", msg: "About photo updated." });
+      setNote({ type: "ok", msg: "Saved to draft. Publish to make it live." });
+      window.dispatchEvent(new Event("bk:draft-changed"));
     } else {
       setNote({ type: "err", msg: data.error || "Upload failed" });
     }
@@ -41,7 +42,8 @@ export default function AboutImageEditor() {
     const res = await fetch("/api/admin/about-image", { method: "DELETE" });
     if (res.ok) {
       await load();
-      setNote({ type: "ok", msg: "Reset to default photo." });
+      setNote({ type: "ok", msg: "Reset to default (draft). Publish to make it live." });
+      window.dispatchEvent(new Event("bk:draft-changed"));
     }
   }
 

@@ -29,6 +29,10 @@ export default function SettingsFields({
 
   useEffect(() => {
     load();
+    // Reload if the draft is discarded elsewhere (Publish bar).
+    const onRevert = () => load();
+    window.addEventListener("bk:draft-reverted", onRevert);
+    return () => window.removeEventListener("bk:draft-reverted", onRevert);
   }, [load]);
 
   async function save(e: React.FormEvent) {
@@ -46,11 +50,12 @@ export default function SettingsFields({
         body: JSON.stringify(patch),
       });
       const data = await res.json().catch(() => ({}));
-      setNote(
-        res.ok
-          ? { type: "ok", msg: "Saved. Changes are live on the website." }
-          : { type: "err", msg: data.error || "Save failed" }
-      );
+      if (res.ok) {
+        setNote({ type: "ok", msg: "Saved to draft. Click “Publish to website” to go live." });
+        window.dispatchEvent(new Event("bk:draft-changed"));
+      } else {
+        setNote({ type: "err", msg: data.error || "Save failed" });
+      }
     } finally {
       setSaving(false);
     }
@@ -97,7 +102,7 @@ export default function SettingsFields({
         </div>
       ))}
       <button className="admin-btn" disabled={saving}>
-        {saving ? "Saving…" : "Save changes"}
+        {saving ? "Saving…" : "Save draft"}
       </button>
     </form>
   );

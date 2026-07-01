@@ -59,11 +59,12 @@ export default function AdminAvailability() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pickupSlots: slots, blockedDates: blocked }),
       });
-      setNote(
-        res.ok
-          ? { type: "ok", msg: "Availability saved. Live on the order form." }
-          : { type: "err", msg: "Save failed" }
-      );
+      if (res.ok) {
+        setNote({ type: "ok", msg: "Saved to draft. Click “Publish to website” to go live." });
+        window.dispatchEvent(new Event("bk:draft-changed"));
+      } else {
+        setNote({ type: "err", msg: "Save failed" });
+      }
     } finally {
       setSaving(false);
     }

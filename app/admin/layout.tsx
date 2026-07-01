@@ -3,6 +3,7 @@
 import "./admin.css";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import PublishBar from "./components/PublishBar";
 
 const NAV = [
   { href: "/admin/home", label: "Home Page" },
@@ -56,7 +57,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button onClick={logout}>Log out</button>
         </div>
       </aside>
-      <div className="admin-main">{children}</div>
+      <div className="admin-main">
+        <PublishBar />
+        {children}
+      </div>
     </div>
   );
 }

@@ -27,6 +27,49 @@ export async function updateSettings(patch: Partial<Settings>): Promise<Settings
   return next;
 }
 
+/* ---------------- Draft / Publish ---------------- */
+
+// The admin edits a DRAFT; the public site reads the PUBLISHED `data`.
+export async function getDraftSettings(): Promise<Settings> {
+  if (!sql) return DEFAULT_SETTINGS;
+  await ensureDb();
+  const rows = await sql`SELECT data, draft FROM settings WHERE id = 1`;
+  if (rows.length === 0) return DEFAULT_SETTINGS;
+  const base = (rows[0].draft as Partial<Settings> | null) ?? (rows[0].data as Partial<Settings>);
+  return { ...DEFAULT_SETTINGS, ...base };
+}
+
+// Save changes to the draft only (does NOT affect the live site).
+export async function saveDraft(patch: Partial<Settings>): Promise<Settings> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  const next = { ...(await getDraftSettings()), ...patch };
+  await sql`UPDATE settings SET draft = ${JSON.stringify(next)}::jsonb WHERE id = 1`;
+  return next;
+}
+
+// Make the draft live.
+export async function publishSettings(): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`UPDATE settings SET data = COALESCE(draft, data), draft = NULL WHERE id = 1`;
+}
+
+// Throw away unpublished changes.
+export async function discardDraft(): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`UPDATE settings SET draft = NULL WHERE id = 1`;
+}
+
+export async function hasUnpublishedChanges(): Promise<boolean> {
+  if (!sql) return false;
+  await ensureDb();
+  const rows = await sql`SELECT (draft IS NOT NULL AND draft::text <> data::text) AS d
+    FROM settings WHERE id = 1`;
+  return rows.length ? Boolean(rows[0].d) : false;
+}
+
 /* ---------------- Menu ---------------- */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -280,7 +323,7 @@ export async function setAboutImage(base64: string, mime: string): Promise<strin
   await ensureDb();
   const url = `/api/about-image?v=${Date.now()}`;
   await sql`UPDATE settings SET about_image_data=${base64}, about_image_mime=${mime} WHERE id = 1`;
-  await updateSettings({ aboutImage: url });
+  await saveDraft({ aboutImage: url });
   return url;
 }
 
@@ -299,5 +342,5 @@ export async function clearAboutImage(): Promise<void> {
   if (!sql) throw new Error("Database not configured");
   await ensureDb();
   await sql`UPDATE settings SET about_image_data=NULL, about_image_mime=NULL WHERE id = 1`;
-  await updateSettings({ aboutImage: "/images/sourdough.jpg" });
+  await saveDraft({ aboutImage: "/images/sourdough.jpg" });
 }
