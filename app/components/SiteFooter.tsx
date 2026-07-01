@@ -12,6 +12,9 @@ export default function SiteFooter({
   logoSrc?: string | null;
 }) {
   const year = new Date().getFullYear();
+  const words = settings.siteName.split(" ");
+  const last = words.length > 1 ? words.pop() : null;
+  const rest = words.join(" ");
   return (
     <footer className="site-footer">
       <div className="container">
@@ -19,7 +22,15 @@ export default function SiteFooter({
           <div>
             <div className="footer-brand">
               <Logo size={52} hasLogo={hasLogo} src={logoSrc} className="footer-logo" />
-              <h4 className="serif">{settings.siteName}</h4>
+              <h4 className="serif">
+                {rest}
+                {last ? (
+                  <>
+                    {" "}
+                    <span>{last}</span>
+                  </>
+                ) : null}
+              </h4>
             </div>
             <p>{settings.footerText}</p>
             <p className="footer-hours">{settings.hours}</p>
