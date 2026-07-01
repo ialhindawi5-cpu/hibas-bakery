@@ -70,6 +70,47 @@ export async function hasUnpublishedChanges(): Promise<boolean> {
   return rows.length ? Boolean(rows[0].d) : false;
 }
 
+/* ---------------- Version history ---------------- */
+
+export type HistoryEntry = { id: number; createdAt: string; label: string };
+
+// Snapshot the currently PUBLISHED (live) settings into history.
+export async function saveHistory(label: string): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  const current = await getSettings();
+  await sql`INSERT INTO settings_history (label, data)
+    VALUES (${label}, ${JSON.stringify(current)}::jsonb)`;
+}
+
+export async function listHistory(): Promise<HistoryEntry[]> {
+  if (!sql) return [];
+  await ensureDb();
+  const rows = await sql`SELECT id, label, created_at FROM settings_history ORDER BY created_at DESC`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return rows.map((r: any) => ({
+    id: r.id,
+    label: r.label,
+    createdAt:
+      typeof r.created_at === "string" ? r.created_at : new Date(r.created_at).toISOString(),
+  }));
+}
+
+// Republish a saved version — makes it live immediately and clears any draft.
+export async function restoreHistory(id: number): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  const rows = await sql`SELECT data FROM settings_history WHERE id = ${id}`;
+  if (!rows.length) throw new Error("Version not found");
+  await sql`UPDATE settings SET data = ${JSON.stringify(rows[0].data)}::jsonb, draft = NULL WHERE id = 1`;
+}
+
+export async function deleteHistory(id: number): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`DELETE FROM settings_history WHERE id = ${id}`;
+}
+
 /* ---------------- Menu ---------------- */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

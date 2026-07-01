@@ -1,6 +1,7 @@
 "use client";
 
 import SettingsFields from "../components/SettingsFields";
+import HistoryManager from "../components/HistoryManager";
 
 export default function AdminSettings() {
   return (
@@ -30,6 +31,8 @@ export default function AdminSettings() {
           { key: "hours", label: "Working hours", hint: "e.g. Monday – Saturday · 11am – 7pm" },
         ]}
       />
+
+      <HistoryManager />
     </>
   );
 }
