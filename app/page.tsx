@@ -175,8 +175,24 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* CTA */}
       <section>
+        <div className="container">
+          <div className="cta-band">
+            <h2>Ready to order?</h2>
+            <p>
+              Place your request online and we&apos;ll be in touch about details
+              and availability.
+            </p>
+            <Link className="btn btn-ghost" href="/order">
+              Start your order
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="alt-bg">
         <div className="container">
           <div className="section-head">
             <p className="eyebrow">Kind words</p>
@@ -217,22 +233,6 @@ export default async function Home() {
             </p>
           </div>
           <TestimonialForm />
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section>
-        <div className="container">
-          <div className="cta-band">
-            <h2>Ready to order?</h2>
-            <p>
-              Place your request online and we&apos;ll be in touch about details
-              and availability.
-            </p>
-            <Link className="btn btn-ghost" href="/order">
-              Start your order
-            </Link>
-          </div>
         </div>
       </section>
     </>
