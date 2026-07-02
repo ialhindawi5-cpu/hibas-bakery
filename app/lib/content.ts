@@ -7,7 +7,13 @@ import {
   DEFAULT_GALLERY,
   DEFAULT_QUESTIONS,
 } from "./defaults";
-import type { Settings, MenuItem, GalleryImage, Question } from "./types";
+import type {
+  Settings,
+  MenuItem,
+  GalleryImage,
+  Question,
+  PricedMenuCategory,
+} from "./types";
 
 /* ---------------- Settings ---------------- */
 
@@ -217,6 +223,51 @@ export async function clearMenuImage(id: number): Promise<void> {
   if (!sql) throw new Error("Database not configured");
   await ensureDb();
   await sql`UPDATE menu_items SET image_data=NULL, image_mime=NULL, image=NULL WHERE id=${id}`;
+}
+
+/* ---------------- Priced menu (view-only, derived from the order form) ---------------- */
+
+// Parse a list of order-form options into categories. Lines starting with
+// "## " become category headings; every other line is an item, split into a
+// name and a trailing price ("Chocolate Chip Cookies - 6 pcs - $9").
+function parsePricedOptions(options: string[]): PricedMenuCategory[] {
+  const cats: PricedMenuCategory[] = [];
+  let current: PricedMenuCategory | null = null;
+  for (const raw of options) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith("## ")) {
+      current = { category: line.slice(3).trim(), items: [] };
+      cats.push(current);
+      continue;
+    }
+    if (!current) {
+      current = { category: "", items: [] };
+      cats.push(current);
+    }
+    const m = line.match(/^(.*?)\s*-\s*(\$[\d.,]+)\s*$/);
+    if (m) current.items.push({ name: m[1].trim(), price: m[2].trim() });
+    else current.items.push({ name: line, price: "" });
+  }
+  return cats.filter((c) => c.items.length > 0);
+}
+
+// The menu page shows the same priced list customers pick from on the order
+// form, so prices stay in one place (edit them under Admin → Order Form).
+// Prefer the question mapped to "items"; otherwise use any multi-choice
+// question whose options carry categories or prices.
+export async function getPricedMenu(): Promise<PricedMenuCategory[]> {
+  const questions = await getQuestions({ activeOnly: true });
+  const candidates = questions.filter(
+    (q) => (q.type === "checkbox" || q.type === "menu") && q.options.length > 0
+  );
+  const picked =
+    candidates.find((q) => q.role === "items") ??
+    candidates.find((q) =>
+      q.options.some((o) => o.startsWith("## ") || o.includes("$"))
+    ) ??
+    null;
+  return picked ? parsePricedOptions(picked.options) : [];
 }
 
 /* ---------------- Gallery ---------------- */

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getMenu } from "../lib/content";
+import { getMenu, getPricedMenu } from "../lib/content";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -11,7 +11,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function MenuPage() {
-  const menu = await getMenu({ activeOnly: true });
+  const [menu, priced] = await Promise.all([
+    getMenu({ activeOnly: true }),
+    getPricedMenu(),
+  ]);
 
   return (
     <>
@@ -46,6 +49,35 @@ export default async function MenuPage() {
               </article>
             ))}
           </div>
+
+          {priced.length > 0 && (
+            <div className="price-list">
+              <p className="eyebrow" style={{ textAlign: "center" }}>
+                Prices
+              </p>
+              <h2 className="price-list-title">Sizes &amp; prices</h2>
+              <div className="price-cats">
+                {priced.map((cat, ci) => (
+                  <div className="price-cat" key={cat.category || ci}>
+                    {cat.category && (
+                      <h3 className="price-cat-title">{cat.category}</h3>
+                    )}
+                    <ul className="price-rows">
+                      {cat.items.map((it, ii) => (
+                        <li className="price-row" key={`${it.name}-${ii}`}>
+                          <span className="price-name">{it.name}</span>
+                          {it.price && (
+                            <span className="price-amt">{it.price}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ textAlign: "center", marginTop: 40 }}>
             <Link className="btn btn-primary" href="/order">
               Place an order

@@ -46,6 +46,11 @@ export type MenuItem = {
   featured: boolean;
 };
 
+// A view-only, categorized price list derived from the order form's priced
+// options (lines starting with "## " are category headings).
+export type PricedMenuItem = { name: string; price: string };
+export type PricedMenuCategory = { category: string; items: PricedMenuItem[] };
+
 export type GalleryImage = {
   id: number;
   src: string;
