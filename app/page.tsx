@@ -192,7 +192,7 @@ export default async function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className="alt-bg">
+      <section>
         <div className="container">
           <div className="section-head">
             <p className="eyebrow">Kind words</p>
