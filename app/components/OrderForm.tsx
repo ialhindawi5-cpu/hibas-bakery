@@ -12,6 +12,16 @@ function splitPrice(o: string): { name: string; price: string } {
   return m ? { name: m[1].trim(), price: m[2].trim() } : { name: o, price: "" };
 }
 
+// Numeric price of an option ("... - $17.50" -> 17.5); 0 if it has no price.
+function priceOf(o: string): number {
+  const m = o.match(/-\s*\$([\d.,]+)\s*$/);
+  return m ? parseFloat(m[1].replace(/,/g, "")) : 0;
+}
+
+function fmtMoney(n: number): string {
+  return "$" + (Number.isInteger(n) ? String(n) : n.toFixed(2));
+}
+
 function fmtTime(t: string): string {
   const [h, m] = t.split(":").map(Number);
   if (isNaN(h)) return t;
@@ -116,6 +126,13 @@ export default function OrderForm({
       const v = values[q.qkey];
       return { qkey: q.qkey, label: q.label, value: Array.isArray(v) ? v.join(", ") : String(v) };
     });
+    if (orderTotal > 0) {
+      answers.push({
+        qkey: "order_total",
+        label: "Estimated total",
+        value: fmtMoney(orderTotal),
+      });
+    }
 
     setSubmitting(true);
     try {
@@ -149,6 +166,13 @@ export default function OrderForm({
       </div>
     );
   }
+
+  // Live total of all selected priced options across the form.
+  const orderTotal = questions.reduce((sum, q) => {
+    const v = values[q.qkey];
+    if (!Array.isArray(v)) return sum;
+    return sum + v.reduce((s, o) => s + priceOf(o), 0);
+  }, 0);
 
   return (
     <form className="form-card" onSubmit={handleSubmit} noValidate>
@@ -285,6 +309,18 @@ export default function OrderForm({
         <label className="q">Pickup location</label>
         <div className="readonly-box">{pickup}</div>
       </div>
+
+      {orderTotal > 0 && (
+        <div className="order-total">
+          <span>
+            Estimated total
+            <span className="order-total-note">
+              Final total is confirmed by the bakery.
+            </span>
+          </span>
+          <span className="order-total-amt">{fmtMoney(orderTotal)}</span>
+        </div>
+      )}
 
       <button type="submit" className="btn btn-primary" disabled={submitting}>
         {submitting ? "Sending…" : "Submit order request"}

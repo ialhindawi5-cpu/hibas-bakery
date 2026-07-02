@@ -56,6 +56,13 @@ export async function POST(req: Request) {
     if (q.role !== "none") role[q.role] = value;
   }
 
+  // The order form sends a computed total (not tied to a question); include it
+  // in the saved order and email so the bakery sees the estimated amount.
+  const totalValue = (byKey.get("order_total") || "").trim();
+  if (totalValue) {
+    answers.push({ label: "Estimated total", value: totalValue });
+  }
+
   const settings = await getSettings();
 
   // Enforce admin-set availability (can't be bypassed client-side).
