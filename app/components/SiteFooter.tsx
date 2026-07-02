@@ -142,10 +142,7 @@ export default function SiteFooter({
           </div>
         </div>
         <div className="footer-bottom">
-          <span>
-            © {year} {settings.siteName} · {settings.pickup}, Ontario, Canada
-          </span>
-          <span className="footer-region">🇨🇦 Available in Canada only</span>
+          © {year} {settings.siteName} · {settings.pickup}, Ontario, Canada
         </div>
       </div>
     </footer>
