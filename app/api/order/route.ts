@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   // in the saved order and email so the bakery sees the estimated amount.
   const totalValue = (byKey.get("order_total") || "").trim();
   if (totalValue) {
-    answers.push({ label: "Estimated total", value: totalValue });
+    answers.push({ label: "Grand Total", value: totalValue });
   }
 
   const settings = await getSettings();

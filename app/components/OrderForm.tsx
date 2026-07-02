@@ -129,7 +129,7 @@ export default function OrderForm({
     if (orderTotal > 0) {
       answers.push({
         qkey: "order_total",
-        label: "Estimated total",
+        label: "Grand Total",
         value: fmtMoney(orderTotal),
       });
     }
@@ -313,7 +313,7 @@ export default function OrderForm({
       {orderTotal > 0 && (
         <div className="order-total">
           <span>
-            Estimated total
+            Grand Total
             <span className="order-total-note">
               Final total is confirmed by the bakery.
             </span>
