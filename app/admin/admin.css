@@ -313,6 +313,18 @@
   background: #f0eceb;
   color: #8a7461;
 }
+.badge.status-pending {
+  background: #fdf3e0;
+  color: #b5791f;
+}
+.badge.status-approved {
+  background: #eaf7ec;
+  color: #1d6b2b;
+}
+.badge.status-declined {
+  background: #f7eaea;
+  color: #a33a3a;
+}
 .order-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));

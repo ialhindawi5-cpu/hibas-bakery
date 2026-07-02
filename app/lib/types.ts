@@ -32,8 +32,6 @@ export type Settings = {
   blockedDates: string[];
   mapQuery: string;
   announcements: string[];
-  // Each entry: "Name | Quote | rating (1-5, optional)".
-  testimonials: string[];
 };
 
 export type MenuItem = {

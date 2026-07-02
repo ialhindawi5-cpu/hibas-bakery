@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { getSettings, getFeaturedMenu, getGallery } from "./lib/content";
+import { getApprovedTestimonials } from "./lib/testimonials";
+import TestimonialForm from "./components/TestimonialForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [settings, featured, gallery] = await Promise.all([
+  const [settings, featured, gallery, testimonials] = await Promise.all([
     getSettings(),
     getFeaturedMenu(),
     getGallery(),
+    getApprovedTestimonials(),
   ]);
 
   // Duplicate the list so the marquee can loop seamlessly.
@@ -173,48 +176,49 @@ export default async function Home() {
       </section>
 
       {/* Testimonials */}
-      {settings.testimonials && settings.testimonials.length > 0 && (
-        <section>
-          <div className="container">
-            <div className="section-head">
-              <p className="eyebrow">Kind words</p>
-              <h2>What our customers say</h2>
-              <p>A few notes from people we&apos;ve baked for.</p>
-            </div>
-            <div className="testimonials">
-              {settings.testimonials.map((t, i) => {
-                const parts = t.split("|").map((s) => s.trim());
-                const name = parts[0] || "";
-                const quote = parts[1] || "";
-                const rating =
-                  parts[2] && !isNaN(Number(parts[2]))
-                    ? Math.max(0, Math.min(5, Math.round(Number(parts[2]))))
-                    : 5;
-                return (
-                  <figure className="testimonial" key={i}>
-                    <div
-                      className="testimonial-stars"
-                      aria-label={`${rating} out of 5 stars`}
-                    >
-                      {"★".repeat(rating)}
-                      <span className="testimonial-stars-empty">
-                        {"★".repeat(5 - rating)}
-                      </span>
-                    </div>
-                    <blockquote>{quote}</blockquote>
-                    <figcaption className="testimonial-author">
-                      <span className="testimonial-avatar" aria-hidden>
-                        {name.charAt(0).toUpperCase()}
-                      </span>
-                      <span className="testimonial-name">{name}</span>
-                    </figcaption>
-                  </figure>
-                );
-              })}
-            </div>
+      <section>
+        <div className="container">
+          <div className="section-head">
+            <p className="eyebrow">Kind words</p>
+            <h2>What our customers say</h2>
+            <p>A few notes from people we&apos;ve baked for.</p>
           </div>
-        </section>
-      )}
+
+          {testimonials.length > 0 && (
+            <div className="testimonials">
+              {testimonials.map((t) => (
+                <figure className="testimonial" key={t.id}>
+                  <div
+                    className="testimonial-stars"
+                    aria-label={`${t.rating} out of 5 stars`}
+                  >
+                    {"★".repeat(t.rating)}
+                    <span className="testimonial-stars-empty">
+                      {"★".repeat(5 - t.rating)}
+                    </span>
+                  </div>
+                  <blockquote>{t.quote}</blockquote>
+                  <figcaption className="testimonial-author">
+                    <span className="testimonial-avatar" aria-hidden>
+                      {t.name.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="testimonial-name">{t.name}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+
+          <div className="testimonial-cta">
+            <h3>Tried our treats? Share your experience</h3>
+            <p>
+              Leave a review below — it&apos;ll appear here once we&apos;ve had a
+              chance to approve it.
+            </p>
+          </div>
+          <TestimonialForm />
+        </div>
+      </section>
 
       {/* CTA */}
       <section>

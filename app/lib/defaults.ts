@@ -53,12 +53,30 @@ export const DEFAULT_SETTINGS: Settings = {
     "Order ahead for the freshest treats",
     "Pickup at 267 Aquilo Crescent",
   ],
-  testimonials: [
-    "Sarah M. | The crinkle cookies are unreal — fudgy, fresh, and gone within a day. Best I've had! | 5",
-    "Leila K. | Ordered maamoul and qatayef for Eid and everyone asked where they were from. Authentic and delicious. | 5",
-    "Daniel R. | Perfect crust on the sourdough and the ordering was so easy. This is our new weekly ritual. | 5",
-  ],
 };
+
+// Seeded (pre-approved) reviews so the home page isn't empty before real
+// customer submissions arrive.
+export const DEFAULT_TESTIMONIALS: { name: string; quote: string; rating: number }[] = [
+  {
+    name: "Sarah M.",
+    quote:
+      "The crinkle cookies are unreal — fudgy, fresh, and gone within a day. Best I've had!",
+    rating: 5,
+  },
+  {
+    name: "Leila K.",
+    quote:
+      "Ordered maamoul and qatayef for Eid and everyone asked where they were from. Authentic and delicious.",
+    rating: 5,
+  },
+  {
+    name: "Daniel R.",
+    quote:
+      "Perfect crust on the sourdough and the ordering was so easy. This is our new weekly ritual.",
+    rating: 5,
+  },
+];
 
 export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [
   {

@@ -4,6 +4,7 @@ import {
   DEFAULT_MENU,
   DEFAULT_GALLERY,
   DEFAULT_QUESTIONS,
+  DEFAULT_TESTIMONIALS,
 } from "./defaults";
 import { hashPassword } from "./password";
 
@@ -95,6 +96,15 @@ async function init() {
     is_read boolean NOT NULL DEFAULT false
   )`;
 
+  await sql`CREATE TABLE IF NOT EXISTS testimonials (
+    id serial PRIMARY KEY,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    name text NOT NULL DEFAULT '',
+    quote text NOT NULL DEFAULT '',
+    rating int NOT NULL DEFAULT 5,
+    status text NOT NULL DEFAULT 'pending'
+  )`;
+
   await sql`CREATE TABLE IF NOT EXISTS questions (
     id serial PRIMARY KEY,
     qkey text NOT NULL,
@@ -146,6 +156,14 @@ async function init() {
     for (const it of DEFAULT_QUESTIONS) {
       await sql`INSERT INTO questions (qkey,label,type,options,required,role,sort_order,active)
         VALUES (${it.qkey},${it.label},${it.type},${JSON.stringify(it.options)}::jsonb,${it.required},${it.role},${it.sortOrder},${it.active})`;
+    }
+  }
+
+  const t = await sql`SELECT count(*)::int AS c FROM testimonials`;
+  if (t[0].c === 0) {
+    for (const it of DEFAULT_TESTIMONIALS) {
+      await sql`INSERT INTO testimonials (name, quote, rating, status)
+        VALUES (${it.name}, ${it.quote}, ${it.rating}, 'approved')`;
     }
   }
 }
