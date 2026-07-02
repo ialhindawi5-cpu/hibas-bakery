@@ -79,8 +79,42 @@ export default function SiteFooter({
           <div>
             <h4>Get in touch</h4>
             <div className="links">
-              <a href={`tel:${settings.phoneLink}`}>{settings.phoneDisplay}</a>
-              <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>
+              <a href={`tel:${settings.phoneLink}`} className="footer-contact">
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.32 1.85.55 2.81.68A2 2 0 0 1 22 16.92z" />
+                </svg>
+                {settings.phoneDisplay}
+              </a>
+              <a
+                href={`mailto:${settings.contactEmail}`}
+                className="footer-contact"
+              >
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+                {settings.contactEmail}
+              </a>
               <a
                 href={settings.instagram}
                 target="_blank"
@@ -108,7 +142,10 @@ export default function SiteFooter({
           </div>
         </div>
         <div className="footer-bottom">
-          © {year} {settings.siteName} · {settings.pickup}
+          <span>
+            © {year} {settings.siteName} · {settings.pickup}, Ontario, Canada
+          </span>
+          <span className="footer-region">🇨🇦 Available in Canada only</span>
         </div>
       </div>
     </footer>
