@@ -498,6 +498,86 @@ section {
   font-weight: 700;
   color: var(--text);
 }
+.tcarousel {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.tcarousel-viewport {
+  overflow: hidden;
+  padding: 6px;
+}
+.tcarousel-track {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+.tcarousel-slide {
+  min-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+}
+.tcarousel-slide .testimonial {
+  flex: 1;
+}
+.tcarousel-arrow {
+  position: absolute;
+  top: 42%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  color: var(--accent);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+}
+.tcarousel-arrow:hover {
+  color: var(--accent-2, var(--accent));
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-50%) scale(1.08);
+}
+.tcarousel-arrow.prev {
+  left: -14px;
+}
+.tcarousel-arrow.next {
+  right: -14px;
+}
+.tcarousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+.tcarousel-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.16s ease, width 0.16s ease;
+}
+.tcarousel-dot.on {
+  width: 24px;
+  background: var(--accent);
+}
+@media (max-width: 600px) {
+  .tcarousel-arrow.prev {
+    left: -6px;
+  }
+  .tcarousel-arrow.next {
+    right: -6px;
+  }
+}
+
 .testimonial-cta {
   text-align: center;
   max-width: 560px;

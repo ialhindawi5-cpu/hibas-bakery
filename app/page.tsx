@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSettings, getFeaturedMenu, getGallery } from "./lib/content";
 import { getApprovedTestimonials } from "./lib/testimonials";
 import TestimonialForm from "./components/TestimonialForm";
+import TestimonialsCarousel from "./components/TestimonialsCarousel";
 
 export const dynamic = "force-dynamic";
 
@@ -201,28 +202,7 @@ export default async function Home() {
           </div>
 
           {testimonials.length > 0 && (
-            <div className="testimonials">
-              {testimonials.map((t) => (
-                <figure className="testimonial" key={t.id}>
-                  <div
-                    className="testimonial-stars"
-                    aria-label={`${t.rating} out of 5 stars`}
-                  >
-                    {"★".repeat(t.rating)}
-                    <span className="testimonial-stars-empty">
-                      {"★".repeat(5 - t.rating)}
-                    </span>
-                  </div>
-                  <blockquote>{t.quote}</blockquote>
-                  <figcaption className="testimonial-author">
-                    <span className="testimonial-avatar" aria-hidden>
-                      {t.name.charAt(0).toUpperCase()}
-                    </span>
-                    <span className="testimonial-name">{t.name}</span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
+            <TestimonialsCarousel items={testimonials} />
           )}
 
           <div className="testimonial-cta">
