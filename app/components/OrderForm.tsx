@@ -312,12 +312,7 @@ export default function OrderForm({
 
       {orderTotal > 0 && (
         <div className="order-total">
-          <span>
-            Grand Total
-            <span className="order-total-note">
-              Final total is confirmed by the bakery.
-            </span>
-          </span>
+          <span>Grand Total</span>
           <span className="order-total-amt">{fmtMoney(orderTotal)}</span>
         </div>
       )}
