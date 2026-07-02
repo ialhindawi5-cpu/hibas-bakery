@@ -5,6 +5,13 @@ import type { Question } from "../lib/types";
 
 type Values = Record<string, string | string[]>;
 
+// Split an option like "Chocolate Chip Cookies - 6 pcs - $9" into a name and a
+// trailing price so the price can be shown right-aligned.
+function splitPrice(o: string): { name: string; price: string } {
+  const m = o.match(/^(.*?)\s*-\s*(\$[\d.,]+)\s*$/);
+  return m ? { name: m[1].trim(), price: m[2].trim() } : { name: o, price: "" };
+}
+
 function fmtTime(t: string): string {
   const [h, m] = t.split(":").map(Number);
   if (isNaN(h)) return t;
@@ -176,22 +183,27 @@ export default function OrderForm({
 
             {(q.type === "menu" || q.type === "checkbox") && (
               <div className="options">
-                {optionsFor(q).map((o) =>
-                  o.startsWith("## ") ? (
-                    <div className="opt-group" key={o}>
-                      {o.slice(3)}
-                    </div>
-                  ) : (
+                {optionsFor(q).map((o) => {
+                  if (o.startsWith("## ")) {
+                    return (
+                      <div className="opt-group" key={o}>
+                        {o.slice(3)}
+                      </div>
+                    );
+                  }
+                  const { name, price } = splitPrice(o);
+                  return (
                     <label className="opt" key={o}>
                       <input
                         type="checkbox"
                         checked={Array.isArray(v) && v.includes(o)}
                         onChange={() => toggleMulti(q.qkey, o)}
                       />
-                      {o}
+                      <span className="opt-name">{name}</span>
+                      {price && <span className="opt-price">{price}</span>}
                     </label>
-                  )
-                )}
+                  );
+                })}
               </div>
             )}
 
