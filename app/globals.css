@@ -1115,22 +1115,29 @@ textarea {
 }
 .order-total {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 14px;
-  margin: 22px 0 6px;
-  padding: 16px 20px;
-  background: var(--bg-soft);
+  gap: 16px;
+  margin: 24px 0 4px;
+  padding: 15px 20px;
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+.order-total > span:first-child {
+  font-size: 0.78rem;
   font-weight: 700;
-  font-size: 1.05rem;
-  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--muted);
 }
 .order-total-amt {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--accent-2, var(--accent));
+  font-family: var(--serif);
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
   white-space: nowrap;
 }
 .opt-group {
