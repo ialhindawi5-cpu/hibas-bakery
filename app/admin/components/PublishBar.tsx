@@ -78,7 +78,7 @@ export default function PublishBar() {
             Discard
           </button>
         )}
-        <button className="publish-btn" onClick={publish} disabled={busy || !pending}>
+        <button className="publish-btn" onClick={publish} disabled={busy}>
           {busy ? "Publishing…" : "Publish to website"}
         </button>
       </div>
