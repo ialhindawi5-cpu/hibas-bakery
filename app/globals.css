@@ -1118,7 +1118,7 @@ textarea {
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin: 24px 0 4px;
+  margin: 24px 0 22px;
   padding: 15px 20px;
   background: var(--card);
   border: 1px solid var(--border);
