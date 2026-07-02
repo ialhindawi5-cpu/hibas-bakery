@@ -53,6 +53,11 @@ export const DEFAULT_SETTINGS: Settings = {
     "Order ahead for the freshest treats",
     "Pickup at 267 Aquilo Crescent",
   ],
+  testimonials: [
+    "Sarah M. | The crinkle cookies are unreal — fudgy, fresh, and gone within a day. Best I've had! | 5",
+    "Leila K. | Ordered maamoul and qatayef for Eid and everyone asked where they were from. Authentic and delicious. | 5",
+    "Daniel R. | Perfect crust on the sourdough and the ordering was so easy. This is our new weekly ritual. | 5",
+  ],
 };
 
 export const DEFAULT_MENU: Omit<MenuItem, "id">[] = [

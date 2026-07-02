@@ -38,6 +38,18 @@ export default function AdminHome() {
       <GalleryManager />
 
       <SettingsFields
+        title="Testimonials (customer reviews)"
+        fields={[
+          {
+            key: "testimonials",
+            label: "Testimonials (one per line)",
+            list: true,
+            hint: 'Format: Name | Review text | rating 1-5 (rating optional, defaults to 5). e.g. Sarah M. | The cookies are amazing! | 5',
+          },
+        ]}
+      />
+
+      <SettingsFields
         title="Footer"
         fields={[
           { key: "footerText", label: "Footer description", textarea: true },

@@ -172,6 +172,50 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      {settings.testimonials && settings.testimonials.length > 0 && (
+        <section>
+          <div className="container">
+            <div className="section-head">
+              <p className="eyebrow">Kind words</p>
+              <h2>What our customers say</h2>
+              <p>A few notes from people we&apos;ve baked for.</p>
+            </div>
+            <div className="testimonials">
+              {settings.testimonials.map((t, i) => {
+                const parts = t.split("|").map((s) => s.trim());
+                const name = parts[0] || "";
+                const quote = parts[1] || "";
+                const rating =
+                  parts[2] && !isNaN(Number(parts[2]))
+                    ? Math.max(0, Math.min(5, Math.round(Number(parts[2]))))
+                    : 5;
+                return (
+                  <figure className="testimonial" key={i}>
+                    <div
+                      className="testimonial-stars"
+                      aria-label={`${rating} out of 5 stars`}
+                    >
+                      {"★".repeat(rating)}
+                      <span className="testimonial-stars-empty">
+                        {"★".repeat(5 - rating)}
+                      </span>
+                    </div>
+                    <blockquote>{quote}</blockquote>
+                    <figcaption className="testimonial-author">
+                      <span className="testimonial-avatar" aria-hidden>
+                        {name.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="testimonial-name">{name}</span>
+                    </figcaption>
+                  </figure>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* CTA */}
       <section>
         <div className="container">
