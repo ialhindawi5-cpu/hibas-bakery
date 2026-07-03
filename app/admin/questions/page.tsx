@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import Link from "next/link";
 import type { Question, QuestionType, QuestionRole } from "@/app/lib/types";
 import SettingsFields from "../components/SettingsFields";
 import { useSettingsForm } from "../components/SettingsProvider";
@@ -284,7 +285,18 @@ export default function AdminQuestions() {
                 />
               </div>
             </div>
-            {hasOptions(q.type) && (
+            {hasOptions(q.type) && q.role === "items" ? (
+              <div className="admin-field">
+                <label>Items &amp; prices</label>
+                <div className="readonly-box" style={{ lineHeight: 1.6 }}>
+                  The items and prices customers choose from are managed in{" "}
+                  <Link href="/admin/menu" style={{ fontWeight: 700 }}>
+                    Menu &amp; Prices → Prices
+                  </Link>
+                  .
+                </div>
+              </div>
+            ) : hasOptions(q.type) ? (
               <div className="admin-field">
                 <label>Options (one per line — start a line with &quot;## &quot; for a category heading)</label>
                 <textarea
@@ -298,7 +310,7 @@ export default function AdminQuestions() {
                   }
                 />
               </div>
-            )}
+            ) : null}
             <div className="admin-actions">
               <label style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 600 }}>
                 <input
