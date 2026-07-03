@@ -67,7 +67,10 @@ export default async function MenuPage() {
                         <li className="price-row" key={`${it.name}-${ii}`}>
                           <span className="price-name">{it.name}</span>
                           {it.price && (
-                            <span className="price-amt">{it.price}</span>
+                            <>
+                              <span className="price-leader" aria-hidden />
+                              <span className="price-amt">{it.price}</span>
+                            </>
                           )}
                         </li>
                       ))}

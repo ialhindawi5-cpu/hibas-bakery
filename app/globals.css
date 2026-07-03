@@ -1348,9 +1348,10 @@ textarea {
 }
 .price-cats {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px 40px;
-  max-width: 860px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  align-items: start;
+  gap: 28px 44px;
+  max-width: 900px;
   margin: 0 auto;
 }
 .price-cat {
@@ -1358,16 +1359,16 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 20px 24px;
+  padding: 26px 28px;
 }
 .price-cat-title {
   color: var(--accent-2, var(--accent));
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin: 0 0 12px;
-  padding-bottom: 8px;
+  letter-spacing: 1.4px;
+  margin: 0 0 8px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
 .price-rows {
@@ -1378,19 +1379,24 @@ textarea {
 .price-row {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  padding: 7px 0;
-}
-.price-row + .price-row {
-  border-top: 1px dashed var(--border);
+  padding: 11px 0;
 }
 .price-name {
   color: var(--text);
+  font-size: 1rem;
+}
+.price-leader {
+  flex: 1;
+  min-width: 16px;
+  margin: 0 8px;
+  border-bottom: 1px dotted var(--border);
+  transform: translateY(-4px);
 }
 .price-amt {
-  margin-left: auto;
+  font-family: var(--serif);
   font-weight: 700;
-  color: var(--text);
+  font-size: 1.05rem;
+  color: var(--accent-2, var(--accent));
   white-space: nowrap;
 }
 .row {
