@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import PublishBar from "./components/PublishBar";
+import SettingsProvider from "./components/SettingsProvider";
 
 const NAV = [
   { href: "/admin/home", label: "Home Page" },
@@ -82,8 +83,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
       <div className="admin-main">
-        <PublishBar />
-        {children}
+        <SettingsProvider>
+          <PublishBar />
+          {children}
+        </SettingsProvider>
       </div>
     </div>
   );

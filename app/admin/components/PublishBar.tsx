@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { useSettingsForm } from "./SettingsProvider";
 
 export default function PublishBar() {
   const pathname = usePathname();
+  const { save, saving, dirty } = useSettingsForm();
   const [pending, setPending] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -60,11 +62,15 @@ export default function PublishBar() {
   }
 
   return (
-    <div className={`publish-bar ${pending ? "pending" : ""}`}>
+    <div className={`publish-bar ${pending || dirty ? "pending" : ""}`}>
       <div className="publish-status">
-        {pending ? (
+        {dirty ? (
           <>
-            <span className="dot" /> You have unpublished changes.
+            <span className="dot" /> You have unsaved changes.
+          </>
+        ) : pending ? (
+          <>
+            <span className="dot" /> Saved — not published yet.
           </>
         ) : msg ? (
           msg
@@ -73,6 +79,9 @@ export default function PublishBar() {
         )}
       </div>
       <div className="publish-actions">
+        <button className="publish-save" onClick={save} disabled={saving || !dirty}>
+          {saving ? "Saving…" : "Save changes"}
+        </button>
         {pending && (
           <button className="publish-discard" onClick={discard} disabled={busy}>
             Discard

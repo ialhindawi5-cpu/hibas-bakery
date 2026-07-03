@@ -11,8 +11,9 @@ export type FieldDef = {
   hint?: string;
 };
 
-// A titled group of settings inputs. All groups on a page share one form state
-// (via SettingsProvider) and are saved together by the page's SettingsSaveBar.
+// A titled group of settings inputs. All groups share one form state (via the
+// layout-level SettingsProvider) and are saved together by the "Save changes"
+// button in the top Publish bar.
 export default function SettingsFields({
   fields,
   title,

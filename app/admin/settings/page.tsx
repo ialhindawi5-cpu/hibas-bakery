@@ -1,13 +1,11 @@
 "use client";
 
 import SettingsFields from "../components/SettingsFields";
-import SettingsProvider from "../components/SettingsProvider";
-import SettingsSaveBar from "../components/SettingsSaveBar";
 import HistoryManager from "../components/HistoryManager";
 
 export default function AdminSettings() {
   return (
-    <SettingsProvider>
+    <>
       <h1 className="admin-h1">Settings</h1>
       <p className="admin-sub">Contact details, pickup, and where orders are emailed.</p>
 
@@ -34,9 +32,7 @@ export default function AdminSettings() {
         ]}
       />
 
-      <SettingsSaveBar />
-
       <HistoryManager />
-    </SettingsProvider>
+    </>
   );
 }

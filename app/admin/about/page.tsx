@@ -1,13 +1,11 @@
 "use client";
 
 import SettingsFields from "../components/SettingsFields";
-import SettingsProvider from "../components/SettingsProvider";
-import SettingsSaveBar from "../components/SettingsSaveBar";
 import AboutImageEditor from "../components/AboutImageEditor";
 
 export default function AdminAbout() {
   return (
-    <SettingsProvider>
+    <>
       <h1 className="admin-h1">About Page</h1>
       <p className="admin-sub">Edit everything shown on the About us page — text, lists, and photo.</p>
 
@@ -59,8 +57,6 @@ export default function AdminAbout() {
           { key: "aboutCtaText", label: "Text", textarea: true },
         ]}
       />
-
-      <SettingsSaveBar />
-    </SettingsProvider>
+    </>
   );
 }
