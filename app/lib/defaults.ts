@@ -31,9 +31,9 @@ export const DEFAULT_SETTINGS: Settings = {
   promiseEyebrow: "What we believe",
   promiseHeading: "Our promise",
   aboutValues: [
-    "💝 | Made with love | Every order is baked by hand with care — never rushed, never mass-produced.",
-    "🌾 | Real ingredients | Simple, quality ingredients and recipes perfected over the years.",
-    "🧁 | Small batches | We bake to order so everything reaches you at its freshest.",
+    "heart | Made with love | Every order is baked by hand with care — never rushed, never mass-produced.",
+    "leaf | Real ingredients | Simple, quality ingredients and recipes perfected over the years.",
+    "sparkle | Small batches | We bake to order so everything reaches you at its freshest.",
   ],
   aboutImage: "/images/sourdough.jpg",
   aboutCtaHeading: "Come taste the difference",

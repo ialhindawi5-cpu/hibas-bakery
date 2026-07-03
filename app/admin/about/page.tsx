@@ -45,7 +45,7 @@ export default function AdminAbout() {
             key: "aboutValues",
             label: "Cards (one per line, format: icon | title | text)",
             list: true,
-            hint: "Example:  💝 | Made with love | Every order is baked by hand.",
+            hint: "Icon can be: heart, leaf, sparkle, clock, pin, or star. Example:  heart | Made with love | Every order is baked by hand.",
           },
         ]}
       />
