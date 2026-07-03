@@ -1283,18 +1283,20 @@ textarea {
   accent-color: var(--accent);
   flex-shrink: 0;
 }
-.opt-name {
+.opt-leader {
   flex: 1;
+  min-width: 16px;
+  align-self: center;
+  border-bottom: 1px dotted var(--border);
 }
 .opt-price {
-  margin-left: auto;
+  font-family: var(--serif);
   font-weight: 700;
-  color: var(--text);
+  color: var(--accent-2, var(--accent));
   white-space: nowrap;
 }
-.opt:has(.opt-price) + .opt:has(.opt-price) {
-  border-top: 1px dashed var(--border);
-  padding-top: 10px;
+.opt:has(.opt-price) {
+  padding: 3px 0;
 }
 .order-total {
   display: flex;

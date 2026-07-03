@@ -224,7 +224,12 @@ export default function OrderForm({
                         onChange={() => toggleMulti(q.qkey, o)}
                       />
                       <span className="opt-name">{name}</span>
-                      {price && <span className="opt-price">{price}</span>}
+                      {price && (
+                        <>
+                          <span className="opt-leader" aria-hidden />
+                          <span className="opt-price">{price}</span>
+                        </>
+                      )}
                     </label>
                   );
                 })}
