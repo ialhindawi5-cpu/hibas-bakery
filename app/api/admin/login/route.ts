@@ -27,7 +27,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
   }
 
-  const token = await createSession(username);
+  let token: string;
+  try {
+    token = await createSession(username);
+  } catch {
+    // AUTH_SECRET not configured — refuse to issue a session rather than sign
+    // with an insecure fallback.
+    return NextResponse.json(
+      { error: "Server is not configured for secure login. Please contact the site owner." },
+      { status: 500 }
+    );
+  }
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,

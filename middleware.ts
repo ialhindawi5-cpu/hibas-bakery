@@ -4,10 +4,14 @@ import { jwtVerify } from "jose";
 
 const SESSION_COOKIE = "hb_admin";
 
-function getSecret(): Uint8Array {
-  return new TextEncoder().encode(
-    process.env.AUTH_SECRET || "dev-insecure-secret-change-me"
-  );
+// Returns the verification secret, or null when it is unsafe to trust tokens.
+// In production a missing AUTH_SECRET returns null so admin access fails closed
+// (a hardcoded fallback in a public repo would let anyone forge a session).
+function getSecret(): Uint8Array | null {
+  const s = process.env.AUTH_SECRET;
+  if (s && s.length > 0) return new TextEncoder().encode(s);
+  if (process.env.NODE_ENV === "production") return null;
+  return new TextEncoder().encode("dev-insecure-secret-change-me");
 }
 
 export async function middleware(req: NextRequest) {
@@ -23,11 +27,12 @@ export async function middleware(req: NextRequest) {
   const isAdminApi = pathname.startsWith("/api/admin") && !isLogin;
 
   if (isAdminPage || isAdminApi) {
+    const secret = getSecret();
     const token = req.cookies.get(SESSION_COOKIE)?.value;
     let ok = false;
-    if (token) {
+    if (token && secret) {
       try {
-        await jwtVerify(token, getSecret());
+        await jwtVerify(token, secret);
         ok = true;
       } catch {
         ok = false;

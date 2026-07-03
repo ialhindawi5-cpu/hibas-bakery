@@ -2,34 +2,39 @@ import { SignJWT, jwtVerify } from "jose";
 
 export const SESSION_COOKIE = "hb_admin";
 
-function getSecret(): Uint8Array {
-  return new TextEncoder().encode(
-    process.env.AUTH_SECRET || "dev-insecure-secret-change-me"
-  );
+// Returns the signing secret, or null when it is unsafe to sign/verify.
+// In production we REFUSE to fall back to a hardcoded secret: the repo is
+// public, so a known fallback would let anyone forge an admin session. When
+// AUTH_SECRET is missing in production this returns null and all admin auth
+// fails closed until the env var is set.
+function getSecret(): Uint8Array | null {
+  const s = process.env.AUTH_SECRET;
+  if (s && s.length > 0) return new TextEncoder().encode(s);
+  if (process.env.NODE_ENV === "production") return null;
+  return new TextEncoder().encode("dev-insecure-secret-change-me");
 }
 
 export function authConfigured(): boolean {
-  return Boolean(process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD);
-}
-
-export function checkCredentials(username: string, password: string): boolean {
-  const u = process.env.ADMIN_USERNAME || "admin";
-  const p = process.env.ADMIN_PASSWORD || "";
-  return Boolean(p) && username === u && password === p;
+  return Boolean(process.env.AUTH_SECRET);
 }
 
 export async function createSession(username: string): Promise<string> {
+  const secret = getSecret();
+  if (!secret) {
+    throw new Error("AUTH_SECRET is not configured");
+  }
   return await new SignJWT({ sub: username })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(getSecret());
+    .sign(secret);
 }
 
 export async function verifySession(token?: string): Promise<boolean> {
-  if (!token) return false;
+  const secret = getSecret();
+  if (!token || !secret) return false;
   try {
-    await jwtVerify(token, getSecret());
+    await jwtVerify(token, secret);
     return true;
   } catch {
     return false;
