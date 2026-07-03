@@ -56,27 +56,29 @@ export default async function MenuPage() {
                 Prices
               </p>
               <h2 className="price-list-title">Sizes &amp; prices</h2>
-              <div className="price-cats">
-                {priced.map((cat, ci) => (
-                  <div className="price-cat" key={cat.category || ci}>
-                    {cat.category && (
-                      <h3 className="price-cat-title">{cat.category}</h3>
-                    )}
-                    <ul className="price-rows">
-                      {cat.items.map((it, ii) => (
-                        <li className="price-row" key={`${it.name}-${ii}`}>
-                          <span className="price-name">{it.name}</span>
-                          {it.price && (
-                            <>
-                              <span className="price-leader" aria-hidden />
-                              <span className="price-amt">{it.price}</span>
-                            </>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+              <div className="price-menu">
+                <div className="price-cats">
+                  {priced.map((cat, ci) => (
+                    <div className="price-cat" key={cat.category || ci}>
+                      {cat.category && (
+                        <h3 className="price-cat-title">{cat.category}</h3>
+                      )}
+                      <ul className="price-rows">
+                        {cat.items.map((it, ii) => (
+                          <li className="price-row" key={`${it.name}-${ii}`}>
+                            <span className="price-name">{it.name}</span>
+                            {it.price && (
+                              <>
+                                <span className="price-leader" aria-hidden />
+                                <span className="price-amt">{it.price}</span>
+                              </>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

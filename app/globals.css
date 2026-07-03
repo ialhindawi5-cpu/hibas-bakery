@@ -1348,20 +1348,43 @@ textarea {
   font-family: var(--serif);
   margin: 4px 0 32px;
 }
-.price-cats {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  align-items: start;
-  gap: 28px 44px;
-  max-width: 900px;
+.price-menu {
+  position: relative;
+  max-width: 880px;
   margin: 0 auto;
+  padding: 46px 52px;
+  background: linear-gradient(160deg, #fffdf9, #fdf4e9);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+}
+/* Thin inner frame, like a printed menu card. */
+.price-menu::before {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(201, 143, 122, 0.28);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.price-cats {
+  column-count: 2;
+  column-gap: 52px;
 }
 .price-cat {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 26px 28px;
+  break-inside: avoid;
+  margin-bottom: 30px;
+}
+.price-cat:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 640px) {
+  .price-menu {
+    padding: 32px 24px;
+  }
+  .price-cats {
+    column-count: 1;
+  }
 }
 .price-cat-title {
   color: var(--accent-2, var(--accent));
