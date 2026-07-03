@@ -331,6 +331,31 @@
   background: #f7eaea;
   color: #a33a3a;
 }
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.settings-tabs button {
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+.settings-tabs button:hover {
+  border-color: var(--accent);
+}
+.settings-tabs button.active {
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+  color: #fff;
+}
 .price-cat-head {
   display: flex;
   align-items: center;
