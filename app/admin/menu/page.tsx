@@ -131,7 +131,7 @@ export default function AdminMenu() {
     <>
       <h1 className="admin-h1">Menu</h1>
       <p className="admin-sub">
-        Add, edit, reorder, or hide items. Upload a photo for each item — no links needed.
+        Add, edit, reorder, or hide items. Changes save automatically as you edit.
       </p>
 
       {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
@@ -207,6 +207,7 @@ export default function AdminMenu() {
                   <input
                     value={item.name}
                     onChange={(e) => patch(item.id, "name", e.target.value)}
+                    onBlur={() => save(item)}
                   />
                 </div>
                 <div className="admin-field" style={{ maxWidth: 80, flex: "0 0 80px" }}>
@@ -214,6 +215,7 @@ export default function AdminMenu() {
                   <input
                     value={item.emoji}
                     onChange={(e) => patch(item.id, "emoji", e.target.value)}
+                    onBlur={() => save(item)}
                   />
                 </div>
                 <div className="admin-field" style={{ maxWidth: 100, flex: "0 0 100px" }}>
@@ -222,6 +224,7 @@ export default function AdminMenu() {
                     type="number"
                     value={item.sortOrder}
                     onChange={(e) => patch(item.id, "sortOrder", Number(e.target.value))}
+                    onBlur={() => save(item)}
                   />
                 </div>
               </div>
@@ -230,6 +233,7 @@ export default function AdminMenu() {
                 <textarea
                   value={item.description}
                   onChange={(e) => patch(item.id, "description", e.target.value)}
+                  onBlur={() => save(item)}
                 />
               </div>
               <div className="admin-field">
@@ -265,13 +269,14 @@ export default function AdminMenu() {
                   <input
                     type="checkbox"
                     checked={item.active}
-                    onChange={(e) => patch(item.id, "active", e.target.checked)}
+                    onChange={(e) => {
+                      const next = { ...item, active: e.target.checked };
+                      patch(item.id, "active", e.target.checked);
+                      save(next);
+                    }}
                   />
                   Visible on site
                 </label>
-                <button className="admin-btn" onClick={() => save(item)}>
-                  Save
-                </button>
                 <button className="admin-btn-danger" onClick={() => remove(item)}>
                   Delete
                 </button>
