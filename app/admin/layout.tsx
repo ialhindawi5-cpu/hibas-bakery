@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className={`admin-side ${menuOpen ? "open" : ""}`}>
         <div className="admin-side-top">
           <div className="admin-brand">
-            Bakery
+            Hiba&apos;s Bakery
             <span>Admin Dashboard</span>
           </div>
           <button
