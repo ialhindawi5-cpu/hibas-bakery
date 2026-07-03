@@ -2,12 +2,23 @@
 
 import SettingsFields from "../components/SettingsFields";
 import HistoryManager from "../components/HistoryManager";
+import LogoEditor from "../components/LogoEditor";
+import UsersManager from "../components/UsersManager";
 
 export default function AdminSettings() {
   return (
     <>
       <h1 className="admin-h1">Settings</h1>
-      <p className="admin-sub">Contact details, pickup, and where orders are emailed.</p>
+      <p className="admin-sub">
+        Your bakery name &amp; logo, contact details, pickup, admin users, and version history.
+      </p>
+
+      <SettingsFields
+        title="Bakery name"
+        fields={[{ key: "siteName", label: "Name (shown in header & footer)" }]}
+      />
+
+      <LogoEditor />
 
       <SettingsFields
         title="Contact & pickup"
@@ -31,6 +42,8 @@ export default function AdminSettings() {
           { key: "hours", label: "Working hours", hint: "e.g. Monday – Saturday · 11am – 7pm" },
         ]}
       />
+
+      <UsersManager />
 
       <HistoryManager />
     </>

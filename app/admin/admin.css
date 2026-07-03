@@ -33,6 +33,8 @@
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 .admin-side nav a {
   color: #d9c7bb;
