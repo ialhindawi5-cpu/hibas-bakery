@@ -5,12 +5,17 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   useCallback,
   type ReactNode,
 } from "react";
 import type { Settings } from "@/app/lib/types";
 
 type Note = { type: "ok" | "err"; msg: string } | null;
+
+// A page (e.g. Prices) can register its own save so the top-bar "Save changes"
+// button saves it too — keeping save + publish in one place.
+type ExtraSaver = () => Promise<boolean>;
 
 type Ctx = {
   settings: Settings | null;
@@ -19,6 +24,7 @@ type Ctx = {
   saving: boolean;
   dirty: boolean;
   note: Note;
+  registerExtraSaver: (fn: ExtraSaver | null, dirty: boolean) => void;
 };
 
 const SettingsCtx = createContext<Ctx | null>(null);
@@ -29,13 +35,20 @@ export function useSettingsForm(): Ctx {
   return c;
 }
 
-// Loads the draft settings once and shares them with every SettingsFields
-// section on the page, so a single "Save changes" button persists them all.
 export default function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [saved, setSaved] = useState<string>(""); // JSON snapshot of last-saved state
+  const [saved, setSaved] = useState<string>(""); // JSON snapshot of last-saved settings
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState<Note>(null);
+
+  // Optional page-provided saver (kept in a ref so keystrokes don't re-render).
+  const extraRef = useRef<ExtraSaver | null>(null);
+  const [extraDirty, setExtraDirty] = useState(false);
+
+  const registerExtraSaver = useCallback((fn: ExtraSaver | null, dirty: boolean) => {
+    extraRef.current = fn;
+    setExtraDirty(fn ? dirty : false); // no-op re-render when value is unchanged
+  }, []);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/settings", { cache: "no-store" });
@@ -47,7 +60,6 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
 
   useEffect(() => {
     load();
-    // Reload if the draft is discarded from the Publish bar.
     const onRevert = () => load();
     window.addEventListener("bk:draft-reverted", onRevert);
     return () => window.removeEventListener("bk:draft-reverted", onRevert);
@@ -58,33 +70,56 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
     setNote(null);
   }, []);
 
+  const settingsDirty = settings ? JSON.stringify(settings) !== saved : false;
+
+  const saveSettings = useCallback(async (): Promise<boolean> => {
+    if (!settings) return true;
+    const res = await fetch("/api/admin/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    });
+    if (res.ok) {
+      setSaved(JSON.stringify(settings));
+      window.dispatchEvent(new Event("bk:draft-changed"));
+    }
+    return res.ok;
+  }, [settings]);
+
   const save = useCallback(async () => {
-    if (!settings) return;
     setSaving(true);
     setNote(null);
     try {
-      const res = await fetch("/api/admin/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setSaved(JSON.stringify(settings));
+      let ok = true;
+      let didSettings = false;
+      let didExtra = false;
+      if (settingsDirty) {
+        didSettings = true;
+        if (!(await saveSettings())) ok = false;
+      }
+      if (extraRef.current && extraDirty) {
+        didExtra = true;
+        if (!(await extraRef.current())) ok = false;
+        if (ok) setExtraDirty(false);
+      }
+      if (!ok) {
+        setNote({ type: "err", msg: "Save failed" });
+      } else if (didSettings && !didExtra) {
         setNote({ type: "ok", msg: "Saved to draft. Click “Publish to website” to go live." });
-        window.dispatchEvent(new Event("bk:draft-changed"));
       } else {
-        setNote({ type: "err", msg: data.error || "Save failed" });
+        setNote({ type: "ok", msg: "Saved." });
       }
     } finally {
       setSaving(false);
     }
-  }, [settings]);
+  }, [settingsDirty, saveSettings, extraDirty]);
 
-  const dirty = settings ? JSON.stringify(settings) !== saved : false;
+  const dirty = settingsDirty || extraDirty;
 
   return (
-    <SettingsCtx.Provider value={{ settings, update, save, saving, dirty, note }}>
+    <SettingsCtx.Provider
+      value={{ settings, update, save, saving, dirty, note, registerExtraSaver }}
+    >
       {children}
     </SettingsCtx.Provider>
   );

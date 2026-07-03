@@ -325,22 +325,6 @@
   background: #f7eaea;
   color: #a33a3a;
 }
-.prices-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 25;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow);
-}
 .price-cat-head {
   display: flex;
   align-items: center;

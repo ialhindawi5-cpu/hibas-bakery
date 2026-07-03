@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { Question } from "@/app/lib/types";
+import { useSettingsForm } from "../components/SettingsProvider";
 
 type Item = { name: string; price: string };
 type Category = { category: string; items: Item[] };
@@ -46,14 +47,16 @@ function serialize(cats: Category[]): string[] {
 }
 
 export default function AdminPrices() {
+  const { registerExtraSaver } = useSettingsForm();
   const [cats, setCats] = useState<Category[]>([]);
   const [questionId, setQuestionId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
+  const [error, setError] = useState("");
+  const savedRef = useRef<string>(""); // snapshot of serialized options at last save/load
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const res = await fetch("/api/admin/questions", { cache: "no-store" });
       const qs = (await res.json()) as Question[];
@@ -66,10 +69,12 @@ export default function AdminPrices() {
           q.options.some((o) => o.startsWith("## ") || o.includes("$"))
         );
       const target = priced ?? qs.find((q) => q.role === "items") ?? null;
+      const parsed = target ? parseOptions(target.options) : [];
       setQuestionId(target ? target.id : null);
-      setCats(target ? parseOptions(target.options) : []);
+      setCats(parsed);
+      savedRef.current = JSON.stringify(serialize(parsed));
     } catch {
-      setNote({ type: "err", msg: "Failed to load prices" });
+      setError("Failed to load prices");
     } finally {
       setLoading(false);
     }
@@ -109,11 +114,10 @@ export default function AdminPrices() {
     setCats((prev) => prev.filter((_, i) => i !== ci));
   }
 
-  async function save() {
-    setSaving(true);
-    setNote(null);
+  // Persist to the priced order-form question. Returns true on success.
+  const doSave = useCallback(async (): Promise<boolean> => {
+    const options = serialize(cats);
     try {
-      const options = serialize(cats);
       let res: Response;
       if (questionId) {
         res = await fetch(`/api/admin/questions/${questionId}`, {
@@ -122,7 +126,6 @@ export default function AdminPrices() {
           body: JSON.stringify({ options, type: "checkbox" }),
         });
       } else {
-        // No priced question yet — create the order items selector.
         res = await fetch("/api/admin/questions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -140,34 +143,32 @@ export default function AdminPrices() {
         const created = await res.json().catch(() => ({}));
         if (res.ok && created?.id) setQuestionId(created.id);
       }
-      if (res.ok) {
-        setNote({ type: "ok", msg: "Prices saved — live on the menu and order form." });
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setNote({ type: "err", msg: data.error || "Save failed" });
-      }
+      if (res.ok) savedRef.current = JSON.stringify(options);
+      return res.ok;
     } catch {
-      setNote({ type: "err", msg: "Save failed" });
-    } finally {
-      setSaving(false);
+      return false;
     }
-  }
+  }, [cats, questionId]);
+
+  const dirty = JSON.stringify(serialize(cats)) !== savedRef.current;
+
+  // Wire this page's save into the top-bar "Save changes" button.
+  useEffect(() => {
+    registerExtraSaver(doSave, dirty);
+  }, [registerExtraSaver, doSave, dirty]);
+  useEffect(() => {
+    return () => registerExtraSaver(null, false);
+  }, [registerExtraSaver]);
 
   return (
     <>
-      <div className="prices-topbar">
-        <div>
-          <h1 className="admin-h1">Prices</h1>
-          <p className="admin-sub" style={{ margin: 0 }}>
-            The sizes &amp; prices shown on the menu and order form. Changes are live immediately.
-          </p>
-        </div>
-        <button className="admin-btn" onClick={save} disabled={saving || loading}>
-          {saving ? "Saving…" : "Save prices"}
-        </button>
-      </div>
+      <h1 className="admin-h1">Prices</h1>
+      <p className="admin-sub">
+        The sizes &amp; prices shown on the menu and order form. Edit, then click{" "}
+        <strong>Save changes</strong> at the top.
+      </p>
 
-      {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
+      {error && <div className="admin-note err">{error}</div>}
 
       {loading ? (
         <p className="order-meta">Loading…</p>
