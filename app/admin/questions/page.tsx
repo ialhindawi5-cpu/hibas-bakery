@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import type { Question, QuestionType, QuestionRole } from "@/app/lib/types";
 import SettingsFields from "../components/SettingsFields";
+import { useSettingsForm } from "../components/SettingsProvider";
 
 const TYPES: { value: QuestionType; label: string }[] = [
   { value: "text", label: "Short text" },
@@ -42,18 +43,23 @@ function hasOptions(t: QuestionType) {
 }
 
 export default function AdminQuestions() {
+  const { registerExtraSaver } = useSettingsForm();
   const [items, setItems] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
   const [draft, setDraft] = useState<Omit<Question, "id">>(emptyDraft);
   const [draftOptions, setDraftOptions] = useState("");
   const [adding, setAdding] = useState(false);
+  // JSON snapshot of each question at last load/save, to detect unsaved edits.
+  const savedRef = useRef<Record<number, string>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/questions", { cache: "no-store" });
-      setItems(await res.json());
+      const data = (await res.json()) as Question[];
+      setItems(data);
+      savedRef.current = Object.fromEntries(data.map((q) => [q.id, JSON.stringify(q)]));
     } catch {
       setNote({ type: "err", msg: "Failed to load questions" });
     } finally {
@@ -69,25 +75,38 @@ export default function AdminQuestions() {
     setItems((prev) => prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)));
   }
 
-  async function save(q: Question) {
-    const res = await fetch(`/api/admin/questions/${q.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(q),
-    });
-    const data = await res.json().catch(() => ({}));
-    setNote(
-      res.ok
-        ? { type: "ok", msg: `Saved "${q.label}". It's live on the order form.` }
-        : { type: "err", msg: data.error || "Save failed" }
-    );
-  }
+  // Save every edited question. Returns true if all succeeded.
+  const doSave = useCallback(async (): Promise<boolean> => {
+    let ok = true;
+    for (const q of items) {
+      if (savedRef.current[q.id] === JSON.stringify(q)) continue; // unchanged
+      const res = await fetch(`/api/admin/questions/${q.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(q),
+      });
+      if (res.ok) savedRef.current[q.id] = JSON.stringify(q);
+      else ok = false;
+    }
+    return ok;
+  }, [items]);
+
+  const dirty = items.some((q) => savedRef.current[q.id] !== JSON.stringify(q));
+
+  // Route saving through the top-bar "Save changes" button.
+  useEffect(() => {
+    registerExtraSaver(doSave, dirty);
+  }, [registerExtraSaver, doSave, dirty]);
+  useEffect(() => {
+    return () => registerExtraSaver(null, false);
+  }, [registerExtraSaver]);
 
   async function remove(q: Question) {
     if (!confirm(`Delete the question "${q.label}"?`)) return;
     const res = await fetch(`/api/admin/questions/${q.id}`, { method: "DELETE" });
     if (res.ok) {
       setItems((prev) => prev.filter((i) => i.id !== q.id));
+      delete savedRef.current[q.id];
       setNote({ type: "ok", msg: `Deleted "${q.label}"` });
     } else {
       setNote({ type: "err", msg: "Delete failed" });
@@ -111,6 +130,7 @@ export default function AdminQuestions() {
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setItems((prev) => [...prev, data]);
+        savedRef.current[data.id] = JSON.stringify(data);
         setDraft(emptyDraft);
         setDraftOptions("");
         setNote({ type: "ok", msg: `Added "${data.label}"` });
@@ -127,7 +147,7 @@ export default function AdminQuestions() {
       <h1 className="admin-h1">Order Form</h1>
       <p className="admin-sub">
         Edit, reorder, hide, or add questions that customers answer when placing an order.
-        Changes are live immediately.
+        After editing, click <strong>Save changes</strong> at the top.
       </p>
 
       {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
@@ -296,9 +316,6 @@ export default function AdminQuestions() {
                 />
                 Visible on form
               </label>
-              <button className="admin-btn" onClick={() => save(q)}>
-                Save
-              </button>
               <button className="admin-btn-danger" onClick={() => remove(q)}>
                 Delete
               </button>
