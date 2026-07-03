@@ -20,10 +20,15 @@ const NAV = [
   { href: "/admin/settings", label: "Settings" },
 ];
 
+// View/moderate pages have nothing to save or publish (changes are live), so
+// the top Save/Publish bar is hidden there.
+const NO_PUBLISH_BAR = ["/admin/orders", "/admin/messages", "/admin/testimonials"];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const showPublishBar = !NO_PUBLISH_BAR.some((p) => pathname.startsWith(p));
 
   // Close the mobile menu on navigation.
   useEffect(() => {
@@ -83,7 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
       <div className="admin-main">
         <SettingsProvider>
-          <PublishBar />
+          {showPublishBar && <PublishBar />}
           {children}
         </SettingsProvider>
       </div>
