@@ -35,6 +35,10 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+.admin-side nav::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 .admin-side nav a {
   color: #d9c7bb;
