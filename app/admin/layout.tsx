@@ -10,8 +10,7 @@ import SettingsProvider from "./components/SettingsProvider";
 const NAV = [
   { href: "/admin/home", label: "Home Page" },
   { href: "/admin/about", label: "About Page" },
-  { href: "/admin/menu", label: "Menu" },
-  { href: "/admin/prices", label: "Prices" },
+  { href: "/admin/menu", label: "Menu & Prices" },
   { href: "/admin/questions", label: "Order Form" },
   { href: "/admin/availability", label: "Availability" },
   { href: "/admin/orders", label: "Orders" },
