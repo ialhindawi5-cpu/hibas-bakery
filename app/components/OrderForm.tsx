@@ -35,6 +35,7 @@ export default function OrderForm({
   menuOptions,
   pickup,
   phoneDisplay,
+  whatsappNumber,
   successTitle,
   successMessage,
   pickupSlots,
@@ -44,6 +45,7 @@ export default function OrderForm({
   menuOptions: string[];
   pickup: string;
   phoneDisplay: string;
+  whatsappNumber: string;
   successTitle: string;
   successMessage: string;
   pickupSlots: string[];
@@ -69,6 +71,8 @@ export default function OrderForm({
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [serverError, setServerError] = useState("");
+  // Pre-filled WhatsApp message built from the submitted order.
+  const [waText, setWaText] = useState("");
 
   function set(qkey: string, value: string | string[]) {
     setValues((v) => ({ ...v, [qkey]: value }));
@@ -134,6 +138,14 @@ export default function OrderForm({
       });
     }
 
+    // Build a readable WhatsApp message from the same answers.
+    const waLines = ["🧁 New order — Hiba's Bakery", ""];
+    for (const a of answers) {
+      if (a.value && a.value.trim()) waLines.push(`${a.label}: ${a.value}`);
+    }
+    waLines.push("", `Pickup: ${pickup}`);
+    setWaText(waLines.join("\n"));
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/order", {
@@ -156,6 +168,10 @@ export default function OrderForm({
   }
 
   if (done) {
+    const waDigits = (whatsappNumber || "").replace(/\D/g, "");
+    const waHref = waDigits
+      ? `https://wa.me/${waDigits}?text=${encodeURIComponent(waText)}`
+      : "";
     return (
       <div className="form-card">
         <div className="success" role="status">
@@ -163,6 +179,24 @@ export default function OrderForm({
           <br />
           {successMessage} For anything urgent, call <strong>{phoneDisplay}</strong>.
         </div>
+        {waHref && (
+          <div style={{ marginTop: 18, textAlign: "center" }}>
+            <p className="order-meta" style={{ marginBottom: 10 }}>
+              Want a faster reply? Send your order to us on WhatsApp too:
+            </p>
+            <a
+              className="btn btn-whatsapp"
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.48-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35zM12.05 21.5h-.01a9.5 9.5 0 0 1-4.83-1.32l-.35-.2-3.59.94.96-3.5-.23-.36a9.46 9.46 0 0 1-1.45-5.05c0-5.23 4.26-9.49 9.5-9.49 2.54 0 4.92.99 6.71 2.78a9.42 9.42 0 0 1 2.78 6.72c-.01 5.23-4.27 9.48-9.5 9.48zm8.08-17.56A11.4 11.4 0 0 0 12.05.5C5.78.5.68 5.6.67 11.87c0 2.09.55 4.13 1.59 5.93L.5 23.5l5.35-1.4a11.34 11.34 0 0 0 5.42 1.38h.01c6.27 0 11.37-5.1 11.38-11.37a11.31 11.31 0 0 0-3.33-8.03z" />
+              </svg>
+              Send order on WhatsApp
+            </a>
+          </div>
+        )}
       </div>
     );
   }

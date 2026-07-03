@@ -43,6 +43,7 @@ export default async function OrderPage() {
             menuOptions={menuOptions}
             pickup={settings.pickup}
             phoneDisplay={settings.phoneDisplay}
+            whatsappNumber={settings.phoneLink}
             successTitle={settings.orderSuccessTitle}
             successMessage={settings.orderSuccessMessage}
             pickupSlots={settings.pickupSlots || []}

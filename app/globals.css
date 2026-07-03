@@ -1298,6 +1298,19 @@ textarea {
 .opt:has(.opt-price) {
   padding: 3px 0;
 }
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: #25d366;
+  color: #fff !important;
+  border: none;
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.28);
+}
+.btn-whatsapp:hover {
+  background: #1ebe5a;
+  transform: translateY(-2px);
+}
 .order-total {
   display: flex;
   align-items: baseline;
