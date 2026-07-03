@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Turnstile from "@/app/components/Turnstile";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -10,16 +13,21 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [captcha, setCaptcha] = useState("");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (TURNSTILE_SITE_KEY && !captcha) {
+      setError("Please complete the verification challenge.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, captcha }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -83,6 +91,9 @@ export default function AdminLogin() {
             </button>
           </div>
         </div>
+        {TURNSTILE_SITE_KEY && (
+          <Turnstile siteKey={TURNSTILE_SITE_KEY} onVerify={setCaptcha} />
+        )}
         <button className="admin-btn" style={{ width: "100%" }} disabled={loading}>
           {loading ? "Signing in…" : "Sign in"}
         </button>

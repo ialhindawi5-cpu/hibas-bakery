@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSession, SESSION_COOKIE } from "@/app/lib/auth";
 import { verifyAdminCredentials } from "@/app/lib/users";
 import { rateLimit, clientIp } from "@/app/lib/rateLimit";
+import { verifyTurnstile } from "@/app/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -15,11 +16,19 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { username?: string; password?: string };
+  let body: { username?: string; password?: string; captcha?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Cloudflare Turnstile (only enforced when TURNSTILE_SECRET_KEY is configured).
+  if (!(await verifyTurnstile(body.captcha, clientIp(req)))) {
+    return NextResponse.json(
+      { error: "Verification failed. Please try again." },
+      { status: 400 }
+    );
   }
 
   const username = String(body.username || "").trim();
