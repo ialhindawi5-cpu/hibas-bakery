@@ -95,10 +95,10 @@ export default function AdminQuestions() {
 
   // Route saving through the top-bar "Save changes" button.
   useEffect(() => {
-    registerExtraSaver(doSave, dirty);
+    registerExtraSaver("questions", doSave, dirty);
   }, [registerExtraSaver, doSave, dirty]);
   useEffect(() => {
-    return () => registerExtraSaver(null, false);
+    return () => registerExtraSaver("questions", null, false);
   }, [registerExtraSaver]);
 
   async function remove(q: Question) {

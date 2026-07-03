@@ -154,10 +154,10 @@ export default function AdminPrices() {
 
   // Wire this page's save into the top-bar "Save changes" button.
   useEffect(() => {
-    registerExtraSaver(doSave, dirty);
+    registerExtraSaver("prices", doSave, dirty);
   }, [registerExtraSaver, doSave, dirty]);
   useEffect(() => {
-    return () => registerExtraSaver(null, false);
+    return () => registerExtraSaver("prices", null, false);
   }, [registerExtraSaver]);
 
   return (

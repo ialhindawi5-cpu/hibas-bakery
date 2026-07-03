@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import type { MenuItem } from "@/app/lib/types";
+import { useSettingsForm } from "../components/SettingsProvider";
 
 type Draft = Omit<MenuItem, "id">;
 
@@ -17,6 +18,7 @@ const emptyDraft: Draft = {
 };
 
 export default function AdminMenu() {
+  const { registerExtraSaver } = useSettingsForm();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
@@ -24,12 +26,15 @@ export default function AdminMenu() {
   const [addFile, setAddFile] = useState<File | null>(null);
   const [addKey, setAddKey] = useState(0);
   const [adding, setAdding] = useState(false);
+  const savedRef = useRef<Record<number, string>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/menu", { cache: "no-store" });
-      setItems(await res.json());
+      const data = (await res.json()) as MenuItem[];
+      setItems(data);
+      savedRef.current = Object.fromEntries(data.map((i) => [i.id, JSON.stringify(i)]));
     } catch {
       setNote({ type: "err", msg: "Failed to load menu" });
     } finally {
@@ -45,19 +50,30 @@ export default function AdminMenu() {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
   }
 
-  async function save(item: MenuItem) {
-    const res = await fetch(`/api/admin/menu/${item.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(item),
-    });
-    const data = await res.json().catch(() => ({}));
-    setNote(
-      res.ok
-        ? { type: "ok", msg: `Saved "${item.name}"` }
-        : { type: "err", msg: data.error || "Save failed" }
-    );
-  }
+  // Save every edited item. Returns true if all succeeded.
+  const doSave = useCallback(async (): Promise<boolean> => {
+    let ok = true;
+    for (const item of items) {
+      if (savedRef.current[item.id] === JSON.stringify(item)) continue;
+      const res = await fetch(`/api/admin/menu/${item.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      if (res.ok) savedRef.current[item.id] = JSON.stringify(item);
+      else ok = false;
+    }
+    return ok;
+  }, [items]);
+
+  const dirty = items.some((i) => savedRef.current[i.id] !== JSON.stringify(i));
+
+  useEffect(() => {
+    registerExtraSaver("menu", doSave, dirty);
+  }, [registerExtraSaver, doSave, dirty]);
+  useEffect(() => {
+    return () => registerExtraSaver("menu", null, false);
+  }, [registerExtraSaver]);
 
   async function uploadImage(item: MenuItem, file: File) {
     setNote({ type: "ok", msg: `Uploading photo for "${item.name}"…` });
@@ -67,6 +83,7 @@ export default function AdminMenu() {
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       patch(item.id, "image", data.image);
+      savedRef.current[item.id] = JSON.stringify({ ...item, image: data.image });
       setNote({ type: "ok", msg: `Photo updated for "${item.name}"` });
     } else {
       setNote({ type: "err", msg: data.error || "Upload failed" });
@@ -77,6 +94,7 @@ export default function AdminMenu() {
     const res = await fetch(`/api/admin/menu/${item.id}/image`, { method: "DELETE" });
     if (res.ok) {
       patch(item.id, "image", null);
+      savedRef.current[item.id] = JSON.stringify({ ...item, image: null });
       setNote({ type: "ok", msg: `Photo removed from "${item.name}"` });
     } else {
       setNote({ type: "err", msg: "Failed to remove photo" });
@@ -88,6 +106,7 @@ export default function AdminMenu() {
     const res = await fetch(`/api/admin/menu/${item.id}`, { method: "DELETE" });
     if (res.ok) {
       setItems((prev) => prev.filter((i) => i.id !== item.id));
+      delete savedRef.current[item.id];
       setNote({ type: "ok", msg: `Deleted "${item.name}"` });
     } else {
       setNote({ type: "err", msg: "Delete failed" });
@@ -118,6 +137,7 @@ export default function AdminMenu() {
         if (up.ok) created = { ...data, image: ud.image };
       }
       setItems((prev) => [...prev, created]);
+      savedRef.current[created.id] = JSON.stringify(created);
       setDraft(emptyDraft);
       setAddFile(null);
       setAddKey((k) => k + 1);
@@ -131,7 +151,8 @@ export default function AdminMenu() {
     <>
       <h1 className="admin-h1">Menu</h1>
       <p className="admin-sub">
-        Add, edit, reorder, or hide items. Changes save automatically as you edit.
+        Add, edit, reorder, or hide items. After editing, click{" "}
+        <strong>Save changes</strong> at the top.
       </p>
 
       {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
@@ -207,7 +228,6 @@ export default function AdminMenu() {
                   <input
                     value={item.name}
                     onChange={(e) => patch(item.id, "name", e.target.value)}
-                    onBlur={() => save(item)}
                   />
                 </div>
                 <div className="admin-field" style={{ maxWidth: 80, flex: "0 0 80px" }}>
@@ -215,7 +235,6 @@ export default function AdminMenu() {
                   <input
                     value={item.emoji}
                     onChange={(e) => patch(item.id, "emoji", e.target.value)}
-                    onBlur={() => save(item)}
                   />
                 </div>
                 <div className="admin-field" style={{ maxWidth: 100, flex: "0 0 100px" }}>
@@ -224,7 +243,6 @@ export default function AdminMenu() {
                     type="number"
                     value={item.sortOrder}
                     onChange={(e) => patch(item.id, "sortOrder", Number(e.target.value))}
-                    onBlur={() => save(item)}
                   />
                 </div>
               </div>
@@ -233,7 +251,6 @@ export default function AdminMenu() {
                 <textarea
                   value={item.description}
                   onChange={(e) => patch(item.id, "description", e.target.value)}
-                  onBlur={() => save(item)}
                 />
               </div>
               <div className="admin-field">
@@ -269,11 +286,7 @@ export default function AdminMenu() {
                   <input
                     type="checkbox"
                     checked={item.active}
-                    onChange={(e) => {
-                      const next = { ...item, active: e.target.checked };
-                      patch(item.id, "active", e.target.checked);
-                      save(next);
-                    }}
+                    onChange={(e) => patch(item.id, "active", e.target.checked)}
                   />
                   Visible on site
                 </label>

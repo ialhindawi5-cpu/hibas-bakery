@@ -24,7 +24,7 @@ type Ctx = {
   saving: boolean;
   dirty: boolean;
   note: Note;
-  registerExtraSaver: (fn: ExtraSaver | null, dirty: boolean) => void;
+  registerExtraSaver: (key: string, fn: ExtraSaver | null, dirty: boolean) => void;
 };
 
 const SettingsCtx = createContext<Ctx | null>(null);
@@ -41,14 +41,26 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState<Note>(null);
 
-  // Optional page-provided saver (kept in a ref so keystrokes don't re-render).
-  const extraRef = useRef<ExtraSaver | null>(null);
+  // Optional page-provided savers, keyed so several managers can coexist on one
+  // page. Kept in refs so keystrokes don't re-render the whole admin.
+  const saversRef = useRef<Map<string, ExtraSaver>>(new Map());
+  const dirtyRef = useRef<Map<string, boolean>>(new Map());
   const [extraDirty, setExtraDirty] = useState(false);
 
-  const registerExtraSaver = useCallback((fn: ExtraSaver | null, dirty: boolean) => {
-    extraRef.current = fn;
-    setExtraDirty(fn ? dirty : false); // no-op re-render when value is unchanged
-  }, []);
+  const registerExtraSaver = useCallback(
+    (key: string, fn: ExtraSaver | null, dirty: boolean) => {
+      if (fn) {
+        saversRef.current.set(key, fn);
+        dirtyRef.current.set(key, dirty);
+      } else {
+        saversRef.current.delete(key);
+        dirtyRef.current.delete(key);
+      }
+      const any = Array.from(dirtyRef.current.values()).some(Boolean);
+      setExtraDirty(any); // no-op re-render when unchanged
+    },
+    []
+  );
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/settings", { cache: "no-store" });
@@ -97,10 +109,10 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
         didSettings = true;
         if (!(await saveSettings())) ok = false;
       }
-      if (extraRef.current && extraDirty) {
+      for (const [key, fn] of saversRef.current) {
+        if (!dirtyRef.current.get(key)) continue;
         didExtra = true;
-        if (!(await extraRef.current())) ok = false;
-        if (ok) setExtraDirty(false);
+        if (!(await fn())) ok = false;
       }
       if (!ok) {
         setNote({ type: "err", msg: "Save failed" });

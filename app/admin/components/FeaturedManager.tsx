@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import type { MenuItem } from "@/app/lib/types";
+import { useSettingsForm } from "./SettingsProvider";
 
 export default function FeaturedManager() {
+  const { registerExtraSaver } = useSettingsForm();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
+  const savedRef = useRef<Record<number, string>>({});
 
   // Add-new-favourite form state
   const [name, setName] = useState("");
@@ -19,7 +22,9 @@ export default function FeaturedManager() {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/menu", { cache: "no-store" });
-      setItems(await res.json());
+      const data = (await res.json()) as MenuItem[];
+      setItems(data);
+      savedRef.current = Object.fromEntries(data.map((i) => [i.id, JSON.stringify(i)]));
     } catch {
       setNote({ type: "err", msg: "Failed to load items" });
     } finally {
@@ -30,6 +35,35 @@ export default function FeaturedManager() {
   useEffect(() => {
     load();
   }, [load]);
+
+  function patch(id: number, field: keyof MenuItem, value: unknown) {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
+  }
+
+  // Save every edited item. Returns true if all succeeded.
+  const doSave = useCallback(async (): Promise<boolean> => {
+    let ok = true;
+    for (const item of items) {
+      if (savedRef.current[item.id] === JSON.stringify(item)) continue;
+      const res = await fetch(`/api/admin/menu/${item.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      if (res.ok) savedRef.current[item.id] = JSON.stringify(item);
+      else ok = false;
+    }
+    return ok;
+  }, [items]);
+
+  const dirty = items.some((i) => savedRef.current[i.id] !== JSON.stringify(i));
+
+  useEffect(() => {
+    registerExtraSaver("carousel", doSave, dirty);
+  }, [registerExtraSaver, doSave, dirty]);
+  useEffect(() => {
+    return () => registerExtraSaver("carousel", null, false);
+  }, [registerExtraSaver]);
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -55,6 +89,7 @@ export default function FeaturedManager() {
         if (up.ok) created = { ...data, image: ud.image };
       }
       setItems((prev) => [...prev, created]);
+      savedRef.current[created.id] = JSON.stringify(created);
       setName("");
       setDescription("");
       setFile(null);
@@ -65,38 +100,6 @@ export default function FeaturedManager() {
     }
   }
 
-  async function toggle(item: MenuItem, featured: boolean) {
-    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, featured } : i)));
-    const res = await fetch(`/api/admin/menu/${item.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ featured }),
-    });
-    setNote(
-      res.ok
-        ? { type: "ok", msg: `"${item.name}" ${featured ? "added to" : "removed from"} the carousel.` }
-        : { type: "err", msg: "Save failed" }
-    );
-  }
-
-  function patch(id: number, field: keyof MenuItem, value: unknown) {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)));
-  }
-
-  async function save(item: MenuItem) {
-    const res = await fetch(`/api/admin/menu/${item.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(item),
-    });
-    const data = await res.json().catch(() => ({}));
-    setNote(
-      res.ok
-        ? { type: "ok", msg: `Saved "${item.name}"` }
-        : { type: "err", msg: data.error || "Save failed" }
-    );
-  }
-
   async function uploadImage(item: MenuItem, f: File) {
     setNote({ type: "ok", msg: `Uploading photo for "${item.name}"…` });
     const fd = new FormData();
@@ -105,6 +108,7 @@ export default function FeaturedManager() {
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       patch(item.id, "image", data.image);
+      savedRef.current[item.id] = JSON.stringify({ ...item, image: data.image });
       setNote({ type: "ok", msg: `Photo updated for "${item.name}"` });
     } else {
       setNote({ type: "err", msg: data.error || "Upload failed" });
@@ -116,6 +120,7 @@ export default function FeaturedManager() {
     const res = await fetch(`/api/admin/menu/${item.id}`, { method: "DELETE" });
     if (res.ok) {
       setItems((prev) => prev.filter((i) => i.id !== item.id));
+      delete savedRef.current[item.id];
       setNote({ type: "ok", msg: `Deleted "${item.name}"` });
     } else {
       setNote({ type: "err", msg: "Delete failed" });
@@ -129,7 +134,7 @@ export default function FeaturedManager() {
       <h2>Our Favourites (carousel)</h2>
       <p className="order-meta" style={{ marginBottom: 12 }}>
         Pick which items scroll in the auto-playing &ldquo;Freshly baked treats&rdquo; carousel on
-        the home page. {count} selected.
+        the home page. {count} selected. Edit, then click <strong>Save changes</strong> at the top.
       </p>
       {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
 
@@ -181,18 +186,13 @@ export default function FeaturedManager() {
             <div style={{ flex: 1 }}>
               <div className="admin-field">
                 <label>Name</label>
-                <input
-                  value={item.name}
-                  onChange={(e) => patch(item.id, "name", e.target.value)}
-                  onBlur={() => save(item)}
-                />
+                <input value={item.name} onChange={(e) => patch(item.id, "name", e.target.value)} />
               </div>
               <div className="admin-field">
                 <label>Description</label>
                 <textarea
                   value={item.description}
                   onChange={(e) => patch(item.id, "description", e.target.value)}
-                  onBlur={() => save(item)}
                 />
               </div>
               <div className="admin-field">
@@ -217,7 +217,7 @@ export default function FeaturedManager() {
                   <input
                     type="checkbox"
                     checked={item.featured}
-                    onChange={(e) => toggle(item, e.target.checked)}
+                    onChange={(e) => patch(item.id, "featured", e.target.checked)}
                   />
                   In carousel
                 </label>
