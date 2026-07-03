@@ -374,6 +374,9 @@ img {
   margin-top: 32px;
 }
 .hero-badges li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -383,6 +386,12 @@ img {
   color: var(--text);
   box-shadow: 0 4px 14px rgba(150, 90, 80, 0.07);
   backdrop-filter: blur(4px);
+}
+.hero-badges li svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: var(--accent);
 }
 
 /* ---------- Page header (inner pages) ---------- */
