@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Question, QuestionType, QuestionRole } from "@/app/lib/types";
 import SettingsFields from "../components/SettingsFields";
+import SettingsProvider from "../components/SettingsProvider";
+import SettingsSaveBar from "../components/SettingsSaveBar";
 
 const TYPES: { value: QuestionType; label: string }[] = [
   { value: "text", label: "Short text" },
@@ -123,7 +125,7 @@ export default function AdminQuestions() {
   }
 
   return (
-    <>
+    <SettingsProvider>
       <h1 className="admin-h1">Order Form</h1>
       <p className="admin-sub">
         Edit, reorder, hide, or add questions that customers answer when placing an order.
@@ -145,6 +147,7 @@ export default function AdminQuestions() {
           },
         ]}
       />
+      <SettingsSaveBar />
 
       {/* Add new question */}
       <div className="admin-card">
@@ -306,6 +309,6 @@ export default function AdminQuestions() {
           </div>
         ))
       )}
-    </>
+    </SettingsProvider>
   );
 }

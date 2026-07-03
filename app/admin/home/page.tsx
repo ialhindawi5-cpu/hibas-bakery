@@ -1,12 +1,14 @@
 "use client";
 
 import SettingsFields from "../components/SettingsFields";
+import SettingsProvider from "../components/SettingsProvider";
+import SettingsSaveBar from "../components/SettingsSaveBar";
 import FeaturedManager from "../components/FeaturedManager";
 import GalleryManager from "../components/GalleryManager";
 
 export default function AdminHome() {
   return (
-    <>
+    <SettingsProvider>
       <h1 className="admin-h1">Home Page</h1>
       <p className="admin-sub">
         Everything shown on the home page — the hero text, the favourites carousel, the gallery,
@@ -43,6 +45,8 @@ export default function AdminHome() {
           { key: "footerText", label: "Footer description", textarea: true },
         ]}
       />
-    </>
+
+      <SettingsSaveBar />
+    </SettingsProvider>
   );
 }

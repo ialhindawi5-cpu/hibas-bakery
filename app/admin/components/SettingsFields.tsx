@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import type { Settings } from "@/app/lib/types";
+import { useSettingsForm } from "./SettingsProvider";
 
 export type FieldDef = {
   key: keyof Settings;
@@ -11,6 +11,8 @@ export type FieldDef = {
   hint?: string;
 };
 
+// A titled group of settings inputs. All groups on a page share one form state
+// (via SettingsProvider) and are saved together by the page's SettingsSaveBar.
 export default function SettingsFields({
   fields,
   title,
@@ -18,80 +20,39 @@ export default function SettingsFields({
   fields: FieldDef[];
   title?: string;
 }) {
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  const load = useCallback(async () => {
-    const res = await fetch("/api/admin/settings", { cache: "no-store" });
-    setSettings(await res.json());
-  }, []);
-
-  useEffect(() => {
-    load();
-    // Reload if the draft is discarded elsewhere (Publish bar).
-    const onRevert = () => load();
-    window.addEventListener("bk:draft-reverted", onRevert);
-    return () => window.removeEventListener("bk:draft-reverted", onRevert);
-  }, [load]);
-
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    if (!settings) return;
-    setSaving(true);
-    setNote(null);
-    try {
-      // Send only this section's fields; the server merges with the rest.
-      const patch: Record<string, unknown> = {};
-      for (const f of fields) patch[f.key] = settings[f.key];
-      const res = await fetch("/api/admin/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setNote({ type: "ok", msg: "Saved to draft. Click “Publish to website” to go live." });
-        window.dispatchEvent(new Event("bk:draft-changed"));
-      } else {
-        setNote({ type: "err", msg: data.error || "Save failed" });
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
+  const { settings, update } = useSettingsForm();
 
   if (!settings) return <p className="order-meta">Loading…</p>;
 
   return (
-    <form onSubmit={save} className="admin-card">
+    <div className="admin-card">
       {title && <h2>{title}</h2>}
-      {note && <div className={`admin-note ${note.type}`}>{note.msg}</div>}
       {fields.map((f) => (
         <div className="admin-field" key={f.key}>
           <label>{f.label}</label>
           {f.list ? (
             <textarea
-              value={Array.isArray(settings[f.key]) ? (settings[f.key] as string[]).join("\n") : ""}
+              value={
+                Array.isArray(settings[f.key]) ? (settings[f.key] as string[]).join("\n") : ""
+              }
               onChange={(e) =>
-                setSettings({
-                  ...settings,
+                update({
                   [f.key]: e.target.value
                     .split("\n")
                     .map((s) => s.trim())
                     .filter(Boolean),
-                })
+                } as Partial<Settings>)
               }
             />
           ) : f.textarea ? (
             <textarea
-              value={settings[f.key]}
-              onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })}
+              value={settings[f.key] as string}
+              onChange={(e) => update({ [f.key]: e.target.value } as Partial<Settings>)}
             />
           ) : (
             <input
-              value={settings[f.key]}
-              onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })}
+              value={settings[f.key] as string}
+              onChange={(e) => update({ [f.key]: e.target.value } as Partial<Settings>)}
             />
           )}
           {f.hint && (
@@ -101,9 +62,6 @@ export default function SettingsFields({
           )}
         </div>
       ))}
-      <button className="admin-btn" disabled={saving}>
-        {saving ? "Saving…" : "Save draft"}
-      </button>
-    </form>
+    </div>
   );
 }

@@ -325,6 +325,36 @@
   background: #f7eaea;
   color: #a33a3a;
 }
+.settings-savebar {
+  position: sticky;
+  bottom: 14px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin: 22px 0;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+}
+.settings-savebar .admin-note {
+  margin: 0;
+  flex: 1 1 240px;
+}
+.settings-savebar-hint {
+  flex: 1 1 200px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.settings-savebar .admin-btn {
+  white-space: nowrap;
+}
 .order-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
