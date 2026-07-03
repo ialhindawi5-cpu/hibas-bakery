@@ -181,13 +181,18 @@ export default function FeaturedManager() {
             <div style={{ flex: 1 }}>
               <div className="admin-field">
                 <label>Name</label>
-                <input value={item.name} onChange={(e) => patch(item.id, "name", e.target.value)} />
+                <input
+                  value={item.name}
+                  onChange={(e) => patch(item.id, "name", e.target.value)}
+                  onBlur={() => save(item)}
+                />
               </div>
               <div className="admin-field">
                 <label>Description</label>
                 <textarea
                   value={item.description}
                   onChange={(e) => patch(item.id, "description", e.target.value)}
+                  onBlur={() => save(item)}
                 />
               </div>
               <div className="admin-field">
@@ -216,9 +221,6 @@ export default function FeaturedManager() {
                   />
                   In carousel
                 </label>
-                <button className="admin-btn" onClick={() => save(item)}>
-                  Save
-                </button>
                 <button className="admin-btn-danger" onClick={() => removeItem(item)}>
                   Delete
                 </button>
