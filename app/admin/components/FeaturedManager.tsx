@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import type { MenuItem } from "@/app/lib/types";
 import { useSettingsForm } from "./SettingsProvider";
-import { resizeImage } from "./resizeImage";
+import { uploadImageTo } from "./resizeImage";
 
 export default function FeaturedManager() {
   const { registerExtraSaver } = useSettingsForm();
@@ -82,12 +82,11 @@ export default function FeaturedManager() {
         return;
       }
       let created: MenuItem = data;
+      let photoError: string | null = null;
       if (file) {
-        const fd = new FormData();
-        fd.append("file", await resizeImage(file));
-        const up = await fetch(`/api/admin/menu/${data.id}/image`, { method: "POST", body: fd });
-        const ud = await up.json().catch(() => ({}));
-        if (up.ok) created = { ...data, image: ud.image };
+        const up = await uploadImageTo(`/api/admin/menu/${data.id}/image`, file);
+        if (up.ok) created = { ...data, image: up.data.image };
+        else photoError = up.error;
       }
       setItems((prev) => [...prev, created]);
       savedRef.current[created.id] = JSON.stringify(created);
@@ -95,7 +94,11 @@ export default function FeaturedManager() {
       setDescription("");
       setFile(null);
       setFileKey((k) => k + 1);
-      setNote({ type: "ok", msg: `Added "${created.name}" to the carousel.` });
+      setNote(
+        photoError
+          ? { type: "err", msg: `Added "${created.name}", but the photo didn't upload: ${photoError}` }
+          : { type: "ok", msg: `Added "${created.name}" to the carousel.` }
+      );
     } finally {
       setAdding(false);
     }
@@ -103,16 +106,13 @@ export default function FeaturedManager() {
 
   async function uploadImage(item: MenuItem, f: File) {
     setNote({ type: "ok", msg: `Uploading photo for "${item.name}"…` });
-    const fd = new FormData();
-    fd.append("file", await resizeImage(f));
-    const res = await fetch(`/api/admin/menu/${item.id}/image`, { method: "POST", body: fd });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      patch(item.id, "image", data.image);
-      savedRef.current[item.id] = JSON.stringify({ ...item, image: data.image });
+    const r = await uploadImageTo(`/api/admin/menu/${item.id}/image`, f);
+    if (r.ok) {
+      patch(item.id, "image", r.data.image);
+      savedRef.current[item.id] = JSON.stringify({ ...item, image: r.data.image });
       setNote({ type: "ok", msg: `Photo updated for "${item.name}"` });
     } else {
-      setNote({ type: "err", msg: data.error || "Upload failed" });
+      setNote({ type: "err", msg: r.error });
     }
   }
 

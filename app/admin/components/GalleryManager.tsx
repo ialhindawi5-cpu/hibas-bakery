@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { GalleryImage } from "@/app/lib/types";
-import { resizeImage } from "./resizeImage";
+import { uploadImageTo } from "./resizeImage";
 
 export default function GalleryManager() {
   const [items, setItems] = useState<GalleryImage[]>([]);
@@ -32,15 +32,12 @@ export default function GalleryManager() {
     if (!file) return;
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", await resizeImage(file));
-      const res = await fetch("/api/admin/gallery", { method: "POST", body: fd });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setItems((prev) => [...prev, data]);
+      const r = await uploadImageTo("/api/admin/gallery", file);
+      if (r.ok) {
+        setItems((prev) => [...prev, r.data]);
         setNote({ type: "ok", msg: "Photo added to the gallery." });
       } else {
-        setNote({ type: "err", msg: data.error || "Upload failed" });
+        setNote({ type: "err", msg: r.error });
       }
     } finally {
       setUploading(false);

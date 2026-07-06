@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { resizeImage } from "./resizeImage";
+import { uploadImageTo } from "./resizeImage";
 
 export default function LogoEditor() {
   const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
@@ -11,15 +11,12 @@ export default function LogoEditor() {
   async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const fd = new FormData();
-    fd.append("file", await resizeImage(file));
-    const res = await fetch("/api/admin/logo", { method: "POST", body: fd });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
+    const r = await uploadImageTo("/api/admin/logo", file);
+    if (r.ok) {
       setV((x) => x + 1);
       setNote({ type: "ok", msg: "Logo updated." });
     } else {
-      setNote({ type: "err", msg: data.error || "Logo upload failed" });
+      setNote({ type: "err", msg: r.error });
     }
     if (fileRef.current) fileRef.current.value = "";
   }

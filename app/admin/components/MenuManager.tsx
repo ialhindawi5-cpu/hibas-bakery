@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import type { MenuItem } from "@/app/lib/types";
 import { useSettingsForm } from "./SettingsProvider";
-import { resizeImage } from "./resizeImage";
+import { uploadImageTo } from "./resizeImage";
 
 type Draft = Omit<MenuItem, "id">;
 
@@ -78,16 +78,13 @@ export default function MenuManager() {
 
   async function uploadImage(item: MenuItem, file: File) {
     setNote({ type: "ok", msg: `Uploading photo for "${item.name}"…` });
-    const fd = new FormData();
-    fd.append("file", await resizeImage(file));
-    const res = await fetch(`/api/admin/menu/${item.id}/image`, { method: "POST", body: fd });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      patch(item.id, "image", data.image);
-      savedRef.current[item.id] = JSON.stringify({ ...item, image: data.image });
+    const r = await uploadImageTo(`/api/admin/menu/${item.id}/image`, file);
+    if (r.ok) {
+      patch(item.id, "image", r.data.image);
+      savedRef.current[item.id] = JSON.stringify({ ...item, image: r.data.image });
       setNote({ type: "ok", msg: `Photo updated for "${item.name}"` });
     } else {
-      setNote({ type: "err", msg: data.error || "Upload failed" });
+      setNote({ type: "err", msg: r.error });
     }
   }
 
@@ -130,19 +127,22 @@ export default function MenuManager() {
         return;
       }
       let created: MenuItem = data;
+      let photoError: string | null = null;
       if (addFile) {
-        const fd = new FormData();
-        fd.append("file", await resizeImage(addFile));
-        const up = await fetch(`/api/admin/menu/${data.id}/image`, { method: "POST", body: fd });
-        const ud = await up.json().catch(() => ({}));
-        if (up.ok) created = { ...data, image: ud.image };
+        const up = await uploadImageTo(`/api/admin/menu/${data.id}/image`, addFile);
+        if (up.ok) created = { ...data, image: up.data.image };
+        else photoError = up.error;
       }
       setItems((prev) => [...prev, created]);
       savedRef.current[created.id] = JSON.stringify(created);
       setDraft(emptyDraft);
       setAddFile(null);
       setAddKey((k) => k + 1);
-      setNote({ type: "ok", msg: `Added "${created.name}"` });
+      setNote(
+        photoError
+          ? { type: "err", msg: `Added "${created.name}", but the photo didn't upload: ${photoError}` }
+          : { type: "ok", msg: `Added "${created.name}"` }
+      );
     } finally {
       setAdding(false);
     }

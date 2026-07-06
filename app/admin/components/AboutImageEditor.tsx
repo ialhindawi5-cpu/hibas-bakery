@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { resizeImage } from "./resizeImage";
+import { uploadImageTo } from "./resizeImage";
 
 export default function AboutImageEditor() {
   const [src, setSrc] = useState("/images/sourdough.jpg");
@@ -24,16 +24,13 @@ export default function AboutImageEditor() {
   async function upload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const fd = new FormData();
-    fd.append("file", await resizeImage(file));
-    const res = await fetch("/api/admin/about-image", { method: "POST", body: fd });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      setSrc(String(data.image));
+    const r = await uploadImageTo("/api/admin/about-image", file);
+    if (r.ok) {
+      setSrc(String(r.data.image));
       setNote({ type: "ok", msg: "Saved to draft. Publish to make it live." });
       window.dispatchEvent(new Event("bk:draft-changed"));
     } else {
-      setNote({ type: "err", msg: data.error || "Upload failed" });
+      setNote({ type: "err", msg: r.error });
     }
     if (fileRef.current) fileRef.current.value = "";
   }
