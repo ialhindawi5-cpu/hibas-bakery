@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import type { MenuItem } from "@/app/lib/types";
 import { useSettingsForm } from "./SettingsProvider";
+import { resizeImage } from "./resizeImage";
 
 export default function FeaturedManager() {
   const { registerExtraSaver } = useSettingsForm();
@@ -83,7 +84,7 @@ export default function FeaturedManager() {
       let created: MenuItem = data;
       if (file) {
         const fd = new FormData();
-        fd.append("file", file);
+        fd.append("file", await resizeImage(file));
         const up = await fetch(`/api/admin/menu/${data.id}/image`, { method: "POST", body: fd });
         const ud = await up.json().catch(() => ({}));
         if (up.ok) created = { ...data, image: ud.image };
@@ -103,7 +104,7 @@ export default function FeaturedManager() {
   async function uploadImage(item: MenuItem, f: File) {
     setNote({ type: "ok", msg: `Uploading photo for "${item.name}"…` });
     const fd = new FormData();
-    fd.append("file", f);
+    fd.append("file", await resizeImage(f));
     const res = await fetch(`/api/admin/menu/${item.id}/image`, { method: "POST", body: fd });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {

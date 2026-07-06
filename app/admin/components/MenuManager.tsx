@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import type { MenuItem } from "@/app/lib/types";
 import { useSettingsForm } from "./SettingsProvider";
+import { resizeImage } from "./resizeImage";
 
 type Draft = Omit<MenuItem, "id">;
 
@@ -78,7 +79,7 @@ export default function MenuManager() {
   async function uploadImage(item: MenuItem, file: File) {
     setNote({ type: "ok", msg: `Uploading photo for "${item.name}"…` });
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", await resizeImage(file));
     const res = await fetch(`/api/admin/menu/${item.id}/image`, { method: "POST", body: fd });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
@@ -131,7 +132,7 @@ export default function MenuManager() {
       let created: MenuItem = data;
       if (addFile) {
         const fd = new FormData();
-        fd.append("file", addFile);
+        fd.append("file", await resizeImage(addFile));
         const up = await fetch(`/api/admin/menu/${data.id}/image`, { method: "POST", body: fd });
         const ud = await up.json().catch(() => ({}));
         if (up.ok) created = { ...data, image: ud.image };

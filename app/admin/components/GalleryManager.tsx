@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { GalleryImage } from "@/app/lib/types";
+import { resizeImage } from "./resizeImage";
 
 export default function GalleryManager() {
   const [items, setItems] = useState<GalleryImage[]>([]);
@@ -32,7 +33,7 @@ export default function GalleryManager() {
     setUploading(true);
     try {
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", await resizeImage(file));
       const res = await fetch("/api/admin/gallery", { method: "POST", body: fd });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {

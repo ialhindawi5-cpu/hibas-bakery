@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { resizeImage } from "./resizeImage";
 
 export default function LogoEditor() {
   const [note, setNote] = useState<{ type: string; msg: string } | null>(null);
@@ -11,7 +12,7 @@ export default function LogoEditor() {
     const file = e.target.files?.[0];
     if (!file) return;
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", await resizeImage(file));
     const res = await fetch("/api/admin/logo", { method: "POST", body: fd });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {

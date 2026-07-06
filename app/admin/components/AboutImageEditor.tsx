@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { resizeImage } from "./resizeImage";
 
 export default function AboutImageEditor() {
   const [src, setSrc] = useState("/images/sourdough.jpg");
@@ -24,7 +25,7 @@ export default function AboutImageEditor() {
     const file = e.target.files?.[0];
     if (!file) return;
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", await resizeImage(file));
     const res = await fetch("/api/admin/about-image", { method: "POST", body: fd });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
