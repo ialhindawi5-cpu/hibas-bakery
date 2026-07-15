@@ -92,6 +92,9 @@ async function init() {
   // When the customer edits or cancels their own order (shown in the admin dashboard).
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS edited_at timestamptz`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancelled_at timestamptz`;
+  // Submitter IP, so a returning visitor sees their own active orders.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS ip text`;
+  await sql`CREATE INDEX IF NOT EXISTS orders_ip_idx ON orders (ip)`;
 
   await sql`CREATE TABLE IF NOT EXISTS messages (
     id serial PRIMARY KEY,

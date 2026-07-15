@@ -44,7 +44,7 @@ export async function POST(req: Request) {
   const editToken = randomUUID();
   let saved: Order | null = null;
   try {
-    saved = await createOrder(newOrder, editToken, body.formState);
+    saved = await createOrder(newOrder, editToken, body.formState, clientIp(req));
   } catch (e) {
     console.error("Failed to save order:", e);
   }

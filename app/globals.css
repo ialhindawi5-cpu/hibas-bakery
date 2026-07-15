@@ -1427,6 +1427,96 @@ textarea {
   opacity: 0.5;
   cursor: default;
 }
+
+/* Returning-visitor active orders (below the order form) */
+.active-orders {
+  margin-top: 34px;
+}
+.active-orders-title {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+.active-orders-sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0 0 16px;
+}
+.active-order-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.active-order-info {
+  min-width: 0;
+  flex: 1;
+}
+.active-order-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.active-order-id {
+  font-weight: 700;
+  color: var(--text);
+}
+.ao-badge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.ao-badge.new {
+  background: #fde7ee;
+  color: #c2607a;
+}
+.ao-badge.confirmed {
+  background: #e3f0fb;
+  color: #2b6cb0;
+}
+.active-order-total {
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--accent-2);
+}
+.active-order-summary {
+  color: var(--text);
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.active-order-date {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 3px;
+}
+.active-order-btn {
+  flex-shrink: 0;
+  display: inline-block;
+  background: var(--accent-2);
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.active-order-btn:hover {
+  background: var(--accent);
+}
 .notice-box {
   padding: 8px 4px;
 }

@@ -71,8 +71,12 @@ export async function rateLimit(
   return memoryLimit(key, limit, windowMs);
 }
 
-export function clientIp(req: Request): string {
-  const xff = req.headers.get("x-forwarded-for");
+export function clientIpFromHeaders(h: { get(name: string): string | null }): string {
+  const xff = h.get("x-forwarded-for");
   if (xff) return xff.split(",")[0].trim();
-  return req.headers.get("x-real-ip") || "unknown";
+  return h.get("x-real-ip") || "unknown";
+}
+
+export function clientIp(req: Request): string {
+  return clientIpFromHeaders(req.headers);
 }
