@@ -52,10 +52,20 @@ export default function AdminOrders() {
     }
   };
 
-  // Sum every "$<amount>" found across the order's answers (prices live in the option text).
+  // Prices live in the option text ("$45"). The order form appends an authoritative
+  // "Grand Total" answer, so prefer that; otherwise sum the priced item options.
+  // (Summing every "$<amount>" — including the Grand Total field — double-counts.)
+  const isTotalLabel = (label: string) => /\btotal\b/i.test(label);
+
   const orderTotal = (o: Order): number => {
+    const grand = o.answers.find((a) => isTotalLabel(a.label));
+    if (grand) {
+      const m = grand.value.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
+      if (m) return parseFloat(m[1]);
+    }
     let total = 0;
     for (const a of o.answers) {
+      if (isTotalLabel(a.label)) continue; // skip total fields to avoid double-counting
       const matches = Array.from(a.value.matchAll(/\$\s*(\d+(?:\.\d{1,2})?)/g));
       for (const m of matches) total += parseFloat(m[1]);
     }
