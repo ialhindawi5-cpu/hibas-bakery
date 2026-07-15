@@ -1512,10 +1512,14 @@ textarea {
   border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 600;
-  transition: background 0.15s;
+  transition: filter 0.15s, box-shadow 0.15s;
 }
 .active-order-btn:hover {
-  background: var(--accent);
+  /* Keep the label white — override the global `a:hover` colour, which would
+     otherwise turn the text the same pink as the button and hide it. */
+  color: #fff;
+  filter: brightness(0.93);
+  box-shadow: 0 6px 16px rgba(194, 96, 122, 0.3);
 }
 .notice-box {
   padding: 8px 4px;
