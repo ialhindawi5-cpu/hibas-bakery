@@ -82,10 +82,20 @@ export async function sendOrderEmail(
 
   const rows = order.answers.filter((a) => a.value && a.value.trim().length > 0);
 
+  // The order form appends an authoritative "Grand Total" answer; prefer it.
+  // Otherwise sum priced options, skipping any total field so it isn't double-counted.
+  const isTotalLabel = (label: string) => /\btotal\b/i.test(label);
   let total = 0;
-  for (const a of order.answers) {
-    const matches = a.value.match(/\$\s*\d+(?:\.\d{1,2})?/g) || [];
-    for (const m of matches) total += parseFloat(m.replace(/[^\d.]/g, ""));
+  const grand = order.answers.find((a) => isTotalLabel(a.label));
+  const grandMatch = grand?.value.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
+  if (grandMatch) {
+    total = parseFloat(grandMatch[1]);
+  } else {
+    for (const a of order.answers) {
+      if (isTotalLabel(a.label)) continue;
+      const matches = a.value.match(/\$\s*\d+(?:\.\d{1,2})?/g) || [];
+      for (const m of matches) total += parseFloat(m.replace(/[^\d.]/g, ""));
+    }
   }
   const totalLine = total > 0 ? `\n\nORDER TOTAL: $${total.toFixed(2)}` : "";
 
