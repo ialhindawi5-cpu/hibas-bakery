@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import { createOrder, type NewOrder, type OrderFormState } from "@/app/lib/orders";
 import { getSettings, getQuestions } from "@/app/lib/content";
@@ -42,9 +43,10 @@ export async function POST(req: Request) {
   const newOrder: NewOrder = built.newOrder;
 
   const editToken = randomUUID();
+  const deviceToken = (await cookies()).get("hb_device")?.value;
   let saved: Order | null = null;
   try {
-    saved = await createOrder(newOrder, editToken, body.formState, clientIp(req));
+    saved = await createOrder(newOrder, editToken, body.formState, clientIp(req), deviceToken);
   } catch (e) {
     console.error("Failed to save order:", e);
   }

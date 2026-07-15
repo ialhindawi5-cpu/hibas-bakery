@@ -38,26 +38,29 @@ export async function createOrder(
   o: NewOrder,
   editToken?: string,
   formState?: OrderFormState,
-  ip?: string
+  ip?: string,
+  deviceToken?: string
 ): Promise<Order | null> {
   if (!sql) return null;
   await ensureDb();
   const rows = await sql`INSERT INTO orders
-    (name, phone, email, pickup_date, pickup_time, answers, edit_token, form_state, ip)
+    (name, phone, email, pickup_date, pickup_time, answers, edit_token, form_state, ip, device_token)
     VALUES (${o.name}, ${o.phone}, ${o.email}, ${o.pickupDate}, ${o.pickupTime},
             ${JSON.stringify(o.answers)}::jsonb, ${editToken || null},
-            ${formState ? JSON.stringify(formState) : null}::jsonb, ${ip || null})
+            ${formState ? JSON.stringify(formState) : null}::jsonb, ${ip || null},
+            ${deviceToken || null})
     RETURNING *`;
   return mapOrder(rows[0]);
 }
 
-// Active (still-editable) orders submitted from a given IP, newest first — so a
-// returning visitor can view, edit or cancel their own orders.
-export async function getActiveOrdersByIp(ip: string): Promise<Order[]> {
-  if (!sql || !ip || ip === "unknown") return [];
+// Active (still-editable) orders placed from a given device, newest first — so a
+// returning visitor can view, edit or cancel their own orders. Matched by the
+// device cookie, so it survives IP/WiFi changes and isn't shared across people.
+export async function getActiveOrdersByDevice(deviceToken: string): Promise<Order[]> {
+  if (!sql || !deviceToken) return [];
   await ensureDb();
   const rows = await sql`SELECT * FROM orders
-    WHERE ip = ${ip} AND status IN ('new', 'confirmed') AND edit_token IS NOT NULL
+    WHERE device_token = ${deviceToken} AND status IN ('new', 'confirmed') AND edit_token IS NOT NULL
     ORDER BY created_at DESC LIMIT 10`;
   return rows.map(mapOrder);
 }

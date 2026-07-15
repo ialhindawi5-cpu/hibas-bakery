@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import OrderForm from "../components/OrderForm";
 import ActiveOrders from "../components/ActiveOrders";
 import { getSettings, getMenu, getQuestions } from "../lib/content";
-import { getActiveOrdersByIp } from "../lib/orders";
-import { clientIpFromHeaders } from "../lib/rateLimit";
+import { getActiveOrdersByDevice } from "../lib/orders";
 
 export const metadata: Metadata = {
   title: "Order",
@@ -20,9 +19,10 @@ export default async function OrderPage() {
     getQuestions({ activeOnly: true }),
   ]);
 
-  // The visitor's own active orders (matched by their submitting IP).
-  const ip = clientIpFromHeaders(await headers());
-  const activeOrders = await getActiveOrdersByIp(ip);
+  // The visitor's own active orders (matched by their device cookie, so they
+  // persist on the same device even if the WiFi / IP changes).
+  const deviceToken = (await cookies()).get("hb_device")?.value || "";
+  const activeOrders = await getActiveOrdersByDevice(deviceToken);
 
   const menuOptions = menu.map((m) => m.name);
 
