@@ -44,7 +44,6 @@ export default function OrderForm({
   initialValues,
   initialQty,
   editToken: editTokenProp,
-  editUntil: editUntilProp,
 }: {
   questions: Question[];
   menuOptions: string[];
@@ -60,7 +59,6 @@ export default function OrderForm({
   initialValues?: Values;
   initialQty?: Record<string, number>;
   editToken?: string;
-  editUntil?: string;
 }) {
   const isEdit = mode === "edit";
   // Earliest selectable date (today; same-day pickup allowed). Set after mount
@@ -93,7 +91,6 @@ export default function OrderForm({
   // Edit link + deadline shown after a successful create (from the API response),
   // or carried through from props while editing.
   const [editToken, setEditToken] = useState<string | null>(editTokenProp || null);
-  const [editUntil, setEditUntil] = useState<string | null>(editUntilProp || null);
   const [copied, setCopied] = useState(false);
 
   function set(qkey: string, value: string | string[]) {
@@ -207,7 +204,6 @@ export default function OrderForm({
         return;
       }
       if (!isEdit && data.editToken) setEditToken(data.editToken);
-      if (data.editUntil) setEditUntil(data.editUntil);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
@@ -266,13 +262,6 @@ export default function OrderForm({
       editToken && typeof window !== "undefined"
         ? `${window.location.origin}/order/edit/${editToken}`
         : "";
-    const deadlineText = editUntil
-      ? new Date(editUntil).toLocaleString([], {
-          weekday: "short",
-          hour: "numeric",
-          minute: "2-digit",
-        })
-      : "";
     const copyEditLink = async () => {
       try {
         await navigator.clipboard.writeText(editHref);
@@ -298,7 +287,7 @@ export default function OrderForm({
             <div className="edit-cta-head">
               <span className="edit-cta-title">Need to change something?</span>
               <span className="edit-cta-note">
-                You can edit this order until <strong>{deadlineText}</strong>. Save this
+                You can edit or cancel this order any time until you pick it up. Save this
                 private link:
               </span>
             </div>

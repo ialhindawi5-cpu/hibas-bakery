@@ -8,7 +8,7 @@ import {
 } from "@/app/lib/orders";
 import { getSettings, getQuestions } from "@/app/lib/content";
 import { sendOrderEmail, sendCustomerOrderEmail } from "@/app/lib/email";
-import { buildOrder, isEditable, editDeadline, type IncomingAnswer } from "@/app/lib/orderBuild";
+import { buildOrder, isEditable, type IncomingAnswer } from "@/app/lib/orderBuild";
 import type { Order } from "@/app/lib/types";
 
 export const runtime = "nodejs";
@@ -20,7 +20,7 @@ function siteOrigin(req: Request): string {
   return host ? `${proto}://${host}` : "";
 }
 
-// Update an existing order via its secret edit token, within the 3-hour window.
+// Update an existing order via its secret edit token, while still editable.
 export async function PUT(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
 
@@ -28,9 +28,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
   if (!existing) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
-  if (!isEditable(existing.createdAt)) {
+  if (!isEditable(existing.status)) {
     return NextResponse.json(
-      { error: "The editing window for this order has closed." },
+      {
+        error:
+          existing.status === "cancelled"
+            ? "This order has been cancelled and can no longer be changed."
+            : "This order has already been completed, so it can no longer be changed online.",
+      },
       { status: 403 }
     );
   }
@@ -81,10 +86,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
     console.error("Failed to send customer order-update email:", e);
   }
 
-  return NextResponse.json({ ok: true, editUntil: editDeadline(saved.createdAt) });
+  return NextResponse.json({ ok: true });
 }
 
-// Customer cancels their own order (soft-cancel), within the 3-hour window.
+// Customer cancels their own order (soft-cancel), while still editable.
 export async function DELETE(_req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
 
@@ -95,9 +100,9 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ toke
   if (existing.status === "cancelled") {
     return NextResponse.json({ ok: true, alreadyCancelled: true });
   }
-  if (!isEditable(existing.createdAt)) {
+  if (!isEditable(existing.status)) {
     return NextResponse.json(
-      { error: "The window to cancel this order online has closed." },
+      { error: "This order has already been completed, so it can no longer be cancelled online." },
       { status: 403 }
     );
   }

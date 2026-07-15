@@ -4,7 +4,7 @@ import { createOrder, type NewOrder, type OrderFormState } from "@/app/lib/order
 import { getSettings, getQuestions } from "@/app/lib/content";
 import { sendOrderEmail } from "@/app/lib/email";
 import { rateLimit, clientIp } from "@/app/lib/rateLimit";
-import { buildOrder, editDeadline, type IncomingAnswer } from "@/app/lib/orderBuild";
+import { buildOrder, type IncomingAnswer } from "@/app/lib/orderBuild";
 import type { Order } from "@/app/lib/types";
 
 export const runtime = "nodejs";
@@ -64,8 +64,7 @@ export async function POST(req: Request) {
     ok: true,
     saved: Boolean(saved),
     emailed,
-    // Give the customer a private link to edit within the allowed window.
+    // Give the customer a private link to edit until the order is picked up.
     editToken: saved ? editToken : null,
-    editUntil: saved ? editDeadline(orderForEmail.createdAt) : null,
   });
 }

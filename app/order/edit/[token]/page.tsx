@@ -3,7 +3,7 @@ import Link from "next/link";
 import OrderForm from "../../../components/OrderForm";
 import { getSettings, getMenu, getQuestions } from "../../../lib/content";
 import { getOrderByToken } from "../../../lib/orders";
-import { isEditable, editDeadline } from "../../../lib/orderBuild";
+import { isEditable } from "../../../lib/orderBuild";
 
 export const metadata: Metadata = {
   title: "Edit your order",
@@ -68,21 +68,15 @@ export default async function EditOrderPage({
     );
   }
 
-  if (!isEditable(order.createdAt)) {
-    const closed = new Date(editDeadline(order.createdAt)).toLocaleString([], {
-      weekday: "short",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+  if (!isEditable(order.status)) {
     return (
       <Shell>
         <div className="form-card">
           <div className="notice-box">
             <strong>This order can no longer be edited online.</strong>
             <p>
-              Orders can be changed for up to 3 hours after submitting (this one closed at{" "}
-              {closed}). To make changes, please call <strong>{settings.phoneDisplay}</strong>{" "}
-              or message us on{" "}
+              It looks like this order has already been completed. To make changes, please
+              call <strong>{settings.phoneDisplay}</strong> or message us on{" "}
               <a href={settings.instagram} target="_blank" rel="noopener noreferrer">
                 {settings.instagramHandle}
               </a>
@@ -109,7 +103,6 @@ export default async function EditOrderPage({
       <OrderForm
         mode="edit"
         editToken={order.editToken}
-        editUntil={editDeadline(order.createdAt)}
         initialValues={form.values}
         initialQty={form.qty}
         questions={questions}

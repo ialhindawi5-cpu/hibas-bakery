@@ -159,7 +159,7 @@ function computeOrderTotal(order: Order): number {
 
 /**
  * Confirmation sent to the CUSTOMER when they edit or cancel their own order.
- * `editUrl` (present for edits) lets them keep editing until the window closes.
+ * `editUrl` (present for edits) lets them keep editing until they pick it up.
  */
 export async function sendCustomerOrderEmail(
   order: Order,

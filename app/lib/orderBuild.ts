@@ -1,19 +1,13 @@
 import type { NewOrder } from "./orders";
-import type { OrderAnswer, Question } from "./types";
+import type { Order, OrderAnswer, Question } from "./types";
 
-// Customers may edit their order for this long after submitting it.
-export const EDIT_WINDOW_MS = 3 * 60 * 60 * 1000; // 3 hours
-
-/** Whether an order created at `createdAt` (ISO string) is still editable. */
-export function isEditable(createdAt: string): boolean {
-  const created = new Date(createdAt).getTime();
-  if (Number.isNaN(created)) return false;
-  return Date.now() < created + EDIT_WINDOW_MS;
-}
-
-/** ISO timestamp when the edit window closes for an order created at `createdAt`. */
-export function editDeadline(createdAt: string): string {
-  return new Date(new Date(createdAt).getTime() + EDIT_WINDOW_MS).toISOString();
+/**
+ * Customers can edit or cancel their order until the bakery hands it over
+ * (marks it "completed") — or until it's already cancelled. In other words,
+ * while it's still "new" or "confirmed".
+ */
+export function isEditable(status: Order["status"]): boolean {
+  return status === "new" || status === "confirmed";
 }
 
 export type IncomingAnswer = { qkey?: string; label?: string; value?: unknown };
