@@ -1298,6 +1298,46 @@ textarea {
 .opt:has(.opt-price) {
   padding: 3px 0;
 }
+.opt-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+.opt-qty button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--card, #fff);
+  border-radius: 7px;
+  color: var(--accent);
+  font-size: 1.1rem;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.opt-qty button:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.opt-qty button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.opt-qty-n {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
 .btn-whatsapp {
   display: inline-flex;
   align-items: center;

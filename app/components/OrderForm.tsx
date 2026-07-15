@@ -66,6 +66,8 @@ export default function OrderForm({
   }
 
   const [values, setValues] = useState<Values>(initial);
+  // Quantity per selected priced option, keyed by "<qkey>|<option>". Defaults to 1.
+  const [qty, setQty] = useState<Record<string, number>>({});
   const [hp, setHp] = useState(""); // honeypot — real users leave this empty
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -86,6 +88,26 @@ export default function OrderForm({
         [qkey]: arr.includes(option) ? arr.filter((o) => o !== option) : [...arr, option],
       };
     });
+  }
+
+  const qtyKey = (qkey: string, o: string) => `${qkey}|${o}`;
+  const getQty = (qkey: string, o: string) => qty[qtyKey(qkey, o)] || 1;
+  function setQtyFor(qkey: string, o: string, n: number) {
+    const clamped = Math.max(1, Math.min(99, Math.floor(n) || 1));
+    setQty((m) => ({ ...m, [qtyKey(qkey, o)]: clamped }));
+  }
+
+  // Turn a selected option into its saved value. Keeps a trailing "$<amount>"
+  // that equals the LINE total (unit × qty) so totals and the invoice parse it
+  // correctly; adds "× N" to the description when more than one is ordered.
+  function formatSelected(qkey: string, o: string): string {
+    const n = getQty(qkey, o);
+    const unit = priceOf(o);
+    if (unit > 0) {
+      const { name } = splitPrice(o);
+      return n > 1 ? `${name} × ${n} - ${fmtMoney(unit * n)}` : `${name} - ${fmtMoney(unit)}`;
+    }
+    return n > 1 ? `${o} × ${n}` : o;
   }
 
   function optionsFor(q: Question): string[] {
@@ -128,7 +150,10 @@ export default function OrderForm({
 
     const answers = questions.map((q) => {
       const v = values[q.qkey];
-      return { qkey: q.qkey, label: q.label, value: Array.isArray(v) ? v.join(", ") : String(v) };
+      const value = Array.isArray(v)
+        ? v.map((o) => formatSelected(q.qkey, o)).join(", ")
+        : String(v);
+      return { qkey: q.qkey, label: q.label, value };
     });
     if (orderTotal > 0) {
       answers.push({
@@ -201,11 +226,11 @@ export default function OrderForm({
     );
   }
 
-  // Live total of all selected priced options across the form.
+  // Live total of all selected priced options across the form (price × quantity).
   const orderTotal = questions.reduce((sum, q) => {
     const v = values[q.qkey];
     if (!Array.isArray(v)) return sum;
-    return sum + v.reduce((s, o) => s + priceOf(o), 0);
+    return sum + v.reduce((s, o) => s + priceOf(o) * getQty(q.qkey, o), 0);
   }, 0);
 
   return (
@@ -250,14 +275,45 @@ export default function OrderForm({
                     );
                   }
                   const { name, price } = splitPrice(o);
+                  const checked = Array.isArray(v) && v.includes(o);
+                  const n = getQty(q.qkey, o);
                   return (
                     <label className="opt" key={o}>
                       <input
                         type="checkbox"
-                        checked={Array.isArray(v) && v.includes(o)}
+                        checked={checked}
                         onChange={() => toggleMulti(q.qkey, o)}
                       />
                       <span className="opt-name">{name}</span>
+                      {checked && price && (
+                        <span
+                          className="opt-qty"
+                          onClick={(e) => {
+                            // Keep clicks on the stepper from toggling the checkbox.
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                        >
+                          <button
+                            type="button"
+                            aria-label={`Decrease ${name} quantity`}
+                            disabled={n <= 1}
+                            onClick={() => setQtyFor(q.qkey, o, n - 1)}
+                          >
+                            −
+                          </button>
+                          <span className="opt-qty-n" aria-live="polite">
+                            {n}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={`Increase ${name} quantity`}
+                            onClick={() => setQtyFor(q.qkey, o, n + 1)}
+                          >
+                            +
+                          </button>
+                        </span>
+                      )}
                       {price && (
                         <>
                           <span className="opt-leader" aria-hidden />
