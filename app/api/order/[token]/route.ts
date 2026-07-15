@@ -7,11 +7,18 @@ import {
   type OrderFormState,
 } from "@/app/lib/orders";
 import { getSettings, getQuestions } from "@/app/lib/content";
-import { sendOrderEmail } from "@/app/lib/email";
+import { sendOrderEmail, sendCustomerOrderEmail } from "@/app/lib/email";
 import { buildOrder, isEditable, editDeadline, type IncomingAnswer } from "@/app/lib/orderBuild";
 import type { Order } from "@/app/lib/types";
 
 export const runtime = "nodejs";
+
+// Public site origin, honouring the proxy headers Vercel sets.
+function siteOrigin(req: Request): string {
+  const proto = req.headers.get("x-forwarded-proto") || "https";
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+  return host ? `${proto}://${host}` : "";
+}
 
 // Update an existing order via its secret edit token, within the 3-hour window.
 export async function PUT(req: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -62,6 +69,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
   } catch (e) {
     console.error("Failed to send order-update email:", e);
   }
+  // Confirm the change to the customer, with a link to keep editing.
+  try {
+    const origin = siteOrigin(req);
+    await sendCustomerOrderEmail(saved, settings.siteName, "edited", {
+      phoneDisplay: settings.phoneDisplay,
+      replyTo: settings.orderEmail,
+      editUrl: origin ? `${origin}/order/edit/${token}` : undefined,
+    });
+  } catch (e) {
+    console.error("Failed to send customer order-update email:", e);
+  }
 
   return NextResponse.json({ ok: true, editUntil: editDeadline(saved.createdAt) });
 }
@@ -96,10 +114,19 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ toke
   }
 
   const settings = await getSettings();
+  // Notify the bakery, then confirm the cancellation to the customer.
   try {
     await sendOrderEmail(cancelled, settings.orderEmail, settings.siteName, "cancelled");
   } catch (e) {
     console.error("Failed to send order-cancel email:", e);
+  }
+  try {
+    await sendCustomerOrderEmail(cancelled, settings.siteName, "cancelled", {
+      phoneDisplay: settings.phoneDisplay,
+      replyTo: settings.orderEmail,
+    });
+  } catch (e) {
+    console.error("Failed to send customer order-cancel email:", e);
   }
 
   return NextResponse.json({ ok: true });

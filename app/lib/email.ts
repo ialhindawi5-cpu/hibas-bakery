@@ -88,22 +88,7 @@ export async function sendOrderEmail(
         : "New order request";
 
   const rows = order.answers.filter((a) => a.value && a.value.trim().length > 0);
-
-  // The order form appends an authoritative "Grand Total" answer; prefer it.
-  // Otherwise sum priced options, skipping any total field so it isn't double-counted.
-  const isTotalLabel = (label: string) => /\btotal\b/i.test(label);
-  let total = 0;
-  const grand = order.answers.find((a) => isTotalLabel(a.label));
-  const grandMatch = grand?.value.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
-  if (grandMatch) {
-    total = parseFloat(grandMatch[1]);
-  } else {
-    for (const a of order.answers) {
-      if (isTotalLabel(a.label)) continue;
-      const matches = a.value.match(/\$\s*\d+(?:\.\d{1,2})?/g) || [];
-      for (const m of matches) total += parseFloat(m.replace(/[^\d.]/g, ""));
-    }
-  }
+  const total = computeOrderTotal(order);
   const totalLine = total > 0 ? `\n\nORDER TOTAL: $${total.toFixed(2)}` : "";
 
   const text =
@@ -154,6 +139,107 @@ export async function sendOrderEmail(
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Prefer the authoritative "Grand Total" answer; otherwise sum priced options,
+// skipping any total field so it isn't double-counted.
+function computeOrderTotal(order: Order): number {
+  const isTotalLabel = (label: string) => /\btotal\b/i.test(label);
+  const grand = order.answers.find((a) => isTotalLabel(a.label));
+  const grandMatch = grand?.value.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
+  if (grandMatch) return parseFloat(grandMatch[1]);
+  let total = 0;
+  for (const a of order.answers) {
+    if (isTotalLabel(a.label)) continue;
+    const matches = a.value.match(/\$\s*\d+(?:\.\d{1,2})?/g) || [];
+    for (const m of matches) total += parseFloat(m.replace(/[^\d.]/g, ""));
+  }
+  return total;
+}
+
+/**
+ * Confirmation sent to the CUSTOMER when they edit or cancel their own order.
+ * `editUrl` (present for edits) lets them keep editing until the window closes.
+ */
+export async function sendCustomerOrderEmail(
+  order: Order,
+  siteName: string,
+  kind: "edited" | "cancelled",
+  opts: { phoneDisplay?: string; editUrl?: string; replyTo?: string } = {}
+): Promise<{ sent: boolean; reason?: string }> {
+  if (!emailConfigured()) return { sent: false, reason: "email-not-configured" };
+  if (!order.email || !order.email.trim()) return { sent: false, reason: "no-customer-email" };
+
+  const cancelled = kind === "cancelled";
+  const heading = cancelled ? "Your order has been cancelled" : "Your order has been updated";
+  const intro = cancelled
+    ? `Hi ${order.name || "there"}, we've cancelled your order at ${siteName} as requested. If this was a mistake, just place a new order or get in touch.`
+    : `Hi ${order.name || "there"}, thanks — we've saved the changes to your order at ${siteName}. Here's your updated order:`;
+
+  const rows = order.answers.filter(
+    (a) => a.value && a.value.trim().length > 0 && !/\btotal\b/i.test(a.label)
+  );
+  const total = computeOrderTotal(order);
+  const phoneLine = opts.phoneDisplay ? ` For anything urgent, call ${opts.phoneDisplay}.` : "";
+
+  const text =
+    `${heading}\n${"-".repeat(heading.length)}\n\n${intro}${phoneLine}\n\n` +
+    (cancelled
+      ? ""
+      : rows.map((a) => `${a.label}: ${a.value.replace(/, /g, "\n  - ")}`).join("\n") +
+        (total > 0 ? `\n\nORDER TOTAL: $${total.toFixed(2)}` : "") +
+        (opts.editUrl ? `\n\nNeed another change? Edit your order here:\n${opts.editUrl}` : "")) +
+    `\n`;
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#3a2b1f">
+      <h2 style="color:#c2607a;margin:0 0 6px">${heading}</h2>
+      <p style="color:#5a3220;margin:0 0 18px;line-height:1.6">${escapeHtml(intro)}${escapeHtml(
+        phoneLine
+      )}</p>
+      ${
+        cancelled
+          ? ""
+          : `<table style="width:100%;border-collapse:collapse;font-size:14px">
+        ${rows
+          .map(
+            (a) =>
+              `<tr><td style="padding:8px 10px;background:#faf0ec;font-weight:bold;width:170px;border:1px solid #eee;vertical-align:top">${escapeHtml(
+                a.label
+              )}</td><td style="padding:8px 10px;border:1px solid #eee">${escapeHtml(a.value).replace(
+                /, /g,
+                "<br>"
+              )}</td></tr>`
+          )
+          .join("")}
+      </table>
+      ${
+        total > 0
+          ? `<p style="margin:16px 0 0;font-size:18px"><strong>Order total: <span style="color:#c2607a">$${total.toFixed(
+              2
+            )}</span></strong></p>`
+          : ""
+      }
+      ${
+        opts.editUrl
+          ? `<p style="margin:22px 0 4px;color:#8a7461;font-size:13px">Need another change?</p>
+             <a href="${opts.editUrl}" style="display:inline-block;background:#c2607a;color:#fff;text-decoration:none;padding:11px 22px;border-radius:10px;font-weight:600">Edit your order</a>`
+          : ""
+      }`
+      }
+      <p style="margin-top:28px;color:#a3897b;font-size:13px">${escapeHtml(siteName)}</p>
+    </div>`;
+
+  await deliver({
+    to: order.email,
+    subject: `${cancelled ? "Your order was cancelled" : "Your order was updated"} — ${siteName}`,
+    text,
+    html,
+    replyTo: opts.replyTo || undefined,
+    siteName,
+  });
+
+  return { sent: true };
 }
 
 export async function sendContactEmail(
