@@ -10,6 +10,10 @@ export type NewOrder = {
   answers: OrderAnswer[];
 };
 
+// Raw form state saved so the customer's edit page can rehydrate the form exactly.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OrderFormState = { values: Record<string, any>; qty: Record<string, number> };
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapOrder(r: any): Order {
   return {
@@ -23,18 +27,64 @@ function mapOrder(r: any): Order {
     pickupTime: r.pickup_time,
     answers: Array.isArray(r.answers) ? r.answers : [],
     status: r.status,
+    editToken: r.edit_token || undefined,
+    formState: r.form_state || undefined,
+    editedAt: r.edited_at ? new Date(r.edited_at).toISOString() : null,
+    cancelledAt: r.cancelled_at ? new Date(r.cancelled_at).toISOString() : null,
   };
 }
 
-export async function createOrder(o: NewOrder): Promise<Order | null> {
+export async function createOrder(
+  o: NewOrder,
+  editToken?: string,
+  formState?: OrderFormState
+): Promise<Order | null> {
   if (!sql) return null;
   await ensureDb();
   const rows = await sql`INSERT INTO orders
-    (name, phone, email, pickup_date, pickup_time, answers)
+    (name, phone, email, pickup_date, pickup_time, answers, edit_token, form_state)
     VALUES (${o.name}, ${o.phone}, ${o.email}, ${o.pickupDate}, ${o.pickupTime},
-            ${JSON.stringify(o.answers)}::jsonb)
+            ${JSON.stringify(o.answers)}::jsonb, ${editToken || null},
+            ${formState ? JSON.stringify(formState) : null}::jsonb)
     RETURNING *`;
   return mapOrder(rows[0]);
+}
+
+export async function getOrderByToken(token: string): Promise<Order | null> {
+  if (!sql || !token) return null;
+  await ensureDb();
+  const rows = await sql`SELECT * FROM orders WHERE edit_token = ${token} LIMIT 1`;
+  return rows.length ? mapOrder(rows[0]) : null;
+}
+
+export async function updateOrderByToken(
+  token: string,
+  o: NewOrder,
+  formState?: OrderFormState
+): Promise<Order | null> {
+  if (!sql || !token) return null;
+  await ensureDb();
+  const rows = await sql`UPDATE orders SET
+    name = ${o.name}, phone = ${o.phone}, email = ${o.email},
+    pickup_date = ${o.pickupDate}, pickup_time = ${o.pickupTime},
+    answers = ${JSON.stringify(o.answers)}::jsonb,
+    form_state = ${formState ? JSON.stringify(formState) : null}::jsonb,
+    edited_at = now()
+    WHERE edit_token = ${token}
+    RETURNING *`;
+  return rows.length ? mapOrder(rows[0]) : null;
+}
+
+// Customer-initiated cancel: keep the row (so the bakery still sees it) but mark
+// it cancelled and stamp the time.
+export async function cancelOrderByToken(token: string): Promise<Order | null> {
+  if (!sql || !token) return null;
+  await ensureDb();
+  const rows = await sql`UPDATE orders SET
+    status = 'cancelled', cancelled_at = now()
+    WHERE edit_token = ${token}
+    RETURNING *`;
+  return rows.length ? mapOrder(rows[0]) : null;
 }
 
 export async function listOrders(): Promise<Order[]> {

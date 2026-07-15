@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { createOrder, type NewOrder } from "@/app/lib/orders";
+import { randomUUID } from "crypto";
+import { createOrder, type NewOrder, type OrderFormState } from "@/app/lib/orders";
 import { getSettings, getQuestions } from "@/app/lib/content";
 import { sendOrderEmail } from "@/app/lib/email";
 import { rateLimit, clientIp } from "@/app/lib/rateLimit";
-import type { Order, OrderAnswer } from "@/app/lib/types";
+import { buildOrder, editDeadline, type IncomingAnswer } from "@/app/lib/orderBuild";
+import type { Order } from "@/app/lib/types";
 
 export const runtime = "nodejs";
-
-type IncomingAnswer = { qkey?: string; label?: string; value?: unknown };
 
 export async function POST(req: Request) {
   // Limit order spam: 6 submissions per 10 minutes per IP.
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { answers?: IncomingAnswer[]; hp?: string };
+  let body: { answers?: IncomingAnswer[]; hp?: string; formState?: OrderFormState };
   try {
     body = await req.json();
   } catch {
@@ -32,69 +32,19 @@ export async function POST(req: Request) {
   }
 
   const incoming = Array.isArray(body.answers) ? body.answers : [];
-  // Map submitted answers by question key.
-  const byKey = new Map<string, string>();
-  for (const a of incoming) {
-    if (a && a.qkey) byKey.set(String(a.qkey), a.value == null ? "" : String(a.value));
-  }
-
   const questions = await getQuestions({ activeOnly: true });
-
-  // Validate required questions.
-  for (const q of questions) {
-    if (q.required && !(byKey.get(q.qkey) || "").trim()) {
-      return NextResponse.json({ error: `Missing field: ${q.label}` }, { status: 400 });
-    }
-  }
-
-  // Build the labelled answer list and the role-mapped fields.
-  const answers: OrderAnswer[] = [];
-  const role: Record<string, string> = {};
-  for (const q of questions) {
-    const value = (byKey.get(q.qkey) || "").trim();
-    answers.push({ label: q.label, value });
-    if (q.role !== "none") role[q.role] = value;
-  }
-
-  // The order form sends a computed total (not tied to a question); include it
-  // in the saved order and email so the bakery sees the estimated amount.
-  const totalValue = (byKey.get("order_total") || "").trim();
-  if (totalValue) {
-    answers.push({ label: "Grand Total", value: totalValue });
-  }
-
   const settings = await getSettings();
 
-  // Enforce admin-set availability (can't be bypassed client-side).
-  if (role.date && (settings.blockedDates || []).includes(role.date)) {
-    return NextResponse.json(
-      { error: "That pickup date isn't available. Please choose another date." },
-      { status: 400 }
-    );
+  const built = buildOrder(incoming, questions, settings);
+  if ("error" in built) {
+    return NextResponse.json({ error: built.error }, { status: 400 });
   }
-  if (
-    role.time &&
-    (settings.pickupSlots || []).length > 0 &&
-    !(settings.pickupSlots || []).includes(role.time)
-  ) {
-    return NextResponse.json(
-      { error: "That pickup time isn't available. Please choose a listed time slot." },
-      { status: 400 }
-    );
-  }
+  const newOrder: NewOrder = built.newOrder;
 
-  const newOrder: NewOrder = {
-    name: role.name || "",
-    phone: role.phone || "",
-    email: role.email || "",
-    pickupDate: role.date || "",
-    pickupTime: role.time || "",
-    answers,
-  };
-
+  const editToken = randomUUID();
   let saved: Order | null = null;
   try {
-    saved = await createOrder(newOrder);
+    saved = await createOrder(newOrder, editToken, body.formState);
   } catch (e) {
     console.error("Failed to save order:", e);
   }
@@ -110,5 +60,12 @@ export async function POST(req: Request) {
     console.error("Failed to send order email:", e);
   }
 
-  return NextResponse.json({ ok: true, saved: Boolean(saved), emailed });
+  return NextResponse.json({
+    ok: true,
+    saved: Boolean(saved),
+    emailed,
+    // Give the customer a private link to edit within the allowed window.
+    editToken: saved ? editToken : null,
+    editUntil: saved ? editDeadline(orderForEmail.createdAt) : null,
+  });
 }

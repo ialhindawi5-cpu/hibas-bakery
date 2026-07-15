@@ -96,4 +96,11 @@ export type Order = {
   pickupTime: string;
   answers: OrderAnswer[];
   status: "new" | "confirmed" | "completed" | "cancelled";
+  // Present on customer-submitted orders: secret edit token + saved form state.
+  editToken?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  formState?: { values: Record<string, any>; qty: Record<string, number> };
+  // Set when the customer changes/cancels their own order (ISO timestamps).
+  editedAt?: string | null;
+  cancelledAt?: string | null;
 };

@@ -317,6 +317,11 @@ export default function AdminOrders() {
               <div>
                 <span className="order-name">{o.name || "Order"}</span>{" "}
                 <span className={`badge ${o.status}`}>{o.status}</span>
+                {o.cancelledAt ? (
+                  <span className="badge customer-flag cancel">Cancelled by customer</span>
+                ) : (
+                  o.editedAt && <span className="badge customer-flag edit">Edited by customer</span>
+                )}
                 {total > 0 && <span className="order-total">${total.toFixed(2)}</span>}
                 {!open && <div className="order-summary-line">{summary(o)}</div>}
               </div>
@@ -331,6 +336,13 @@ export default function AdminOrders() {
             {/* Expanded detail */}
             {open && (
               <div className="order-detail">
+                {(o.cancelledAt || o.editedAt) && (
+                  <div className={`customer-activity ${o.cancelledAt ? "cancel" : "edit"}`}>
+                    {o.cancelledAt
+                      ? `⚠ The customer cancelled this order on ${fmtDate(o.cancelledAt)}.`
+                      : `✎ The customer edited this order on ${fmtDate(o.editedAt!)}. Details below are up to date.`}
+                  </div>
+                )}
                 {filled.length === 0 ? (
                   <p className="order-meta">
                     No detailed answers were saved for this order (it may predate the order-form

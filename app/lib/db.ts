@@ -85,6 +85,13 @@ async function init() {
     status text NOT NULL DEFAULT 'new'
   )`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS answers jsonb NOT NULL DEFAULT '[]'`;
+  // Customer self-service edit: a secret token + the raw form state to rehydrate.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS edit_token text`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS form_state jsonb`;
+  await sql`CREATE INDEX IF NOT EXISTS orders_edit_token_idx ON orders (edit_token)`;
+  // When the customer edits or cancels their own order (shown in the admin dashboard).
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS edited_at timestamptz`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS cancelled_at timestamptz`;
 
   await sql`CREATE TABLE IF NOT EXISTS messages (
     id serial PRIMARY KEY,

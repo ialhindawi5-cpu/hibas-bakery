@@ -331,6 +331,35 @@
   background: #f7eaea;
   color: #a33a3a;
 }
+.badge.customer-flag {
+  margin-left: 6px;
+  text-transform: none;
+}
+.badge.customer-flag.edit {
+  background: #fdf3e0;
+  color: #b5791f;
+}
+.badge.customer-flag.cancel {
+  background: #f7eaea;
+  color: #a33a3a;
+}
+.customer-activity {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.customer-activity.edit {
+  background: #fdf3e0;
+  color: #92610f;
+  border: 1px solid #f2ddb0;
+}
+.customer-activity.cancel {
+  background: #f7eaea;
+  color: #8f2f2f;
+  border: 1px solid #eccaca;
+}
 .settings-tabs {
   display: flex;
   flex-wrap: wrap;

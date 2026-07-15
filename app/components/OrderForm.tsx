@@ -40,6 +40,11 @@ export default function OrderForm({
   successMessage,
   pickupSlots,
   blockedDates,
+  mode = "create",
+  initialValues,
+  initialQty,
+  editToken: editTokenProp,
+  editUntil: editUntilProp,
 }: {
   questions: Question[];
   menuOptions: string[];
@@ -50,7 +55,14 @@ export default function OrderForm({
   successMessage: string;
   pickupSlots: string[];
   blockedDates: string[];
+  // Edit mode: rehydrate an existing order and PUT changes instead of creating.
+  mode?: "create" | "edit";
+  initialValues?: Values;
+  initialQty?: Record<string, number>;
+  editToken?: string;
+  editUntil?: string;
 }) {
+  const isEdit = mode === "edit";
   // Earliest selectable date (today; same-day pickup allowed). Set after mount
   // to avoid a server/client hydration mismatch.
   const [today, setToday] = useState("");
@@ -64,17 +76,25 @@ export default function OrderForm({
   for (const q of questions) {
     initial[q.qkey] = q.type === "checkbox" || q.type === "menu" ? [] : "";
   }
+  // In edit mode, start from the saved order's form state.
+  const initialState: Values = initialValues ? { ...initial, ...initialValues } : initial;
 
-  const [values, setValues] = useState<Values>(initial);
+  const [values, setValues] = useState<Values>(initialState);
   // Quantity per selected priced option, keyed by "<qkey>|<option>". Defaults to 1.
-  const [qty, setQty] = useState<Record<string, number>>({});
+  const [qty, setQty] = useState<Record<string, number>>(initialQty || {});
   const [hp, setHp] = useState(""); // honeypot — real users leave this empty
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
   const [serverError, setServerError] = useState("");
   // Pre-filled WhatsApp message built from the submitted order.
   const [waText, setWaText] = useState("");
+  // Edit link + deadline shown after a successful create (from the API response),
+  // or carried through from props while editing.
+  const [editToken, setEditToken] = useState<string | null>(editTokenProp || null);
+  const [editUntil, setEditUntil] = useState<string | null>(editUntilProp || null);
+  const [copied, setCopied] = useState(false);
 
   function set(qkey: string, value: string | string[]) {
     setValues((v) => ({ ...v, [qkey]: value }));
@@ -164,25 +184,30 @@ export default function OrderForm({
     }
 
     // Build a readable WhatsApp message from the same answers.
-    const waLines = ["🧁 New order — Hiba's Bakery", ""];
+    const waLines = [`🧁 ${isEdit ? "Updated" : "New"} order — Hiba's Bakery`, ""];
     for (const a of answers) {
       if (a.value && a.value.trim()) waLines.push(`${a.label}: ${a.value}`);
     }
     waLines.push("", `Pickup: ${pickup}`);
     setWaText(waLines.join("\n"));
 
+    // Raw form state so the customer's edit page can rehydrate the form exactly.
+    const formState = { values, qty };
+
     setSubmitting(true);
     try {
-      const res = await fetch("/api/order", {
-        method: "POST",
+      const res = await fetch(isEdit ? `/api/order/${editToken}` : "/api/order", {
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers, hp }),
+        body: JSON.stringify({ answers, hp, formState }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setServerError(data.error || "Something went wrong. Please try again.");
         return;
       }
+      if (!isEdit && data.editToken) setEditToken(data.editToken);
+      if (data.editUntil) setEditUntil(data.editUntil);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
@@ -192,18 +217,101 @@ export default function OrderForm({
     }
   }
 
+  async function handleCancel() {
+    if (!editToken) return;
+    if (
+      !window.confirm(
+        "Cancel this order? This will let the bakery know you no longer need it. This cannot be undone."
+      )
+    )
+      return;
+    setServerError("");
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/order/${editToken}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setServerError(data.error || "Could not cancel your order. Please try again.");
+        return;
+      }
+      setCancelled(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setServerError("Network error. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (cancelled) {
+    return (
+      <div className="form-card">
+        <div className="notice-box">
+          <strong>Your order has been cancelled.</strong>
+          <p>
+            We&apos;ve let the bakery know. If this was a mistake or you&apos;d like to order
+            again, call <strong>{phoneDisplay}</strong> or place a new order.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (done) {
     const waDigits = (whatsappNumber || "").replace(/\D/g, "");
     const waHref = waDigits
       ? `https://wa.me/${waDigits}?text=${encodeURIComponent(waText)}`
       : "";
+    const editHref =
+      editToken && typeof window !== "undefined"
+        ? `${window.location.origin}/order/edit/${editToken}`
+        : "";
+    const deadlineText = editUntil
+      ? new Date(editUntil).toLocaleString([], {
+          weekday: "short",
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : "";
+    const copyEditLink = async () => {
+      try {
+        await navigator.clipboard.writeText(editHref);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch {
+        /* clipboard unavailable — the link is still shown for manual copy */
+      }
+    };
     return (
       <div className="form-card">
         <div className="success" role="status">
-          <strong>{successTitle}</strong>
+          <strong>{isEdit ? "Your order has been updated!" : successTitle}</strong>
           <br />
-          {successMessage} For anything urgent, call <strong>{phoneDisplay}</strong>.
+          {isEdit
+            ? "We've saved your changes and let the bakery know."
+            : successMessage}{" "}
+          For anything urgent, call <strong>{phoneDisplay}</strong>.
         </div>
+
+        {editHref && (
+          <div className="edit-cta">
+            <div className="edit-cta-head">
+              <span className="edit-cta-title">Need to change something?</span>
+              <span className="edit-cta-note">
+                You can edit this order until <strong>{deadlineText}</strong>. Save this
+                private link:
+              </span>
+            </div>
+            <div className="edit-cta-row">
+              <a className="edit-cta-link" href={editHref}>
+                {editHref}
+              </a>
+              <button type="button" className="edit-cta-copy" onClick={copyEditLink}>
+                {copied ? "Copied!" : "Copy link"}
+              </button>
+            </div>
+          </div>
+        )}
         {waHref && (
           <div style={{ marginTop: 18, textAlign: "center" }}>
             <p className="order-meta" style={{ marginBottom: 10 }}>
@@ -245,6 +353,13 @@ export default function OrderForm({
         aria-hidden="true"
         style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
       />
+      {isEdit && (
+        <div className="edit-banner" role="status">
+          You&apos;re editing your order. Make your changes below and save — the bakery will
+          be notified.
+        </div>
+      )}
+
       {serverError && (
         <div className="error" style={{ marginBottom: 16, fontSize: "0.95rem" }}>
           {serverError}
@@ -413,8 +528,19 @@ export default function OrderForm({
       )}
 
       <button type="submit" className="btn btn-primary" disabled={submitting}>
-        {submitting ? "Sending…" : "Submit order request"}
+        {submitting ? "Saving…" : isEdit ? "Save changes" : "Submit order request"}
       </button>
+
+      {isEdit && editToken && (
+        <button
+          type="button"
+          className="btn-cancel-order"
+          onClick={handleCancel}
+          disabled={submitting}
+        >
+          Cancel this order
+        </button>
+      )}
     </form>
   );
 }

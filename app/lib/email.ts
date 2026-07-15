@@ -76,9 +76,16 @@ async function deliver(opts: {
 export async function sendOrderEmail(
   order: Order,
   to: string,
-  siteName: string
+  siteName: string,
+  kind: "new" | "edited" | "cancelled" = "new"
 ): Promise<{ sent: boolean; reason?: string }> {
   if (!emailConfigured()) return { sent: false, reason: "email-not-configured" };
+  const heading =
+    kind === "cancelled"
+      ? "Order CANCELLED by customer"
+      : kind === "edited"
+        ? "Order updated by customer"
+        : "New order request";
 
   const rows = order.answers.filter((a) => a.value && a.value.trim().length > 0);
 
@@ -100,7 +107,7 @@ export async function sendOrderEmail(
   const totalLine = total > 0 ? `\n\nORDER TOTAL: $${total.toFixed(2)}` : "";
 
   const text =
-    `New order request from the ${siteName} website\n` +
+    `${heading} from the ${siteName} website\n` +
     `----------------------------------------\n` +
     rows.map((a) => `${a.label}: ${a.value.replace(/, /g, "\n  - ")}`).join("\n") +
     totalLine +
@@ -108,7 +115,7 @@ export async function sendOrderEmail(
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#3a2b1f">
-      <h2 style="color:#c2607a;margin:0 0 4px">New order request</h2>
+      <h2 style="color:#c2607a;margin:0 0 4px">${heading}</h2>
       <p style="color:#8a7461;margin:0 0 16px">via the ${siteName} website</p>
       <table style="width:100%;border-collapse:collapse;font-size:14px">
         ${rows
@@ -131,9 +138,11 @@ export async function sendOrderEmail(
       }
     </div>`;
 
+  const subjectPrefix =
+    kind === "cancelled" ? "Order cancelled" : kind === "edited" ? "Order updated" : "New order";
   await deliver({
     to,
-    subject: `New order — ${order.name || "Website"}`,
+    subject: `${subjectPrefix} — ${order.name || "Website"}`,
     text,
     html,
     replyTo: order.email || undefined,
