@@ -43,15 +43,41 @@ const upstashConfigured = credentials !== null;
  */
 export function rateLimitStatus() {
   const envKeys = Object.keys(process.env);
+  let host: string | null = null;
+  try {
+    if (credentials) host = new URL(credentials.url).host;
+  } catch {
+    host = "unparseable";
+  }
   return {
     upstashConfigured,
     source: credentials?.source ?? null,
+    // Hostname only — useless without the token, and it reveals whether the
+    // configured URL points at the database we think it does.
+    host,
+    tokenLength: credentials?.token.length ?? 0,
     canonicalUrlPresent: Boolean(process.env.UPSTASH_REDIS_REST_URL),
     canonicalTokenPresent: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN),
     kvUrlCandidates: envKeys.filter((k) => /(^|_)KV_REST_API_URL$/.test(k)).length,
     kvTokenCandidates: envKeys.filter((k) => /(^|_)KV_REST_API_TOKEN$/.test(k)).length,
     totalEnvKeys: envKeys.length,
   };
+}
+
+/**
+ * Live round-trip against Redis. This is what distinguishes "credentials present"
+ * from "credentials that actually work" — a wrong or read-only token authenticates
+ * as configured but fails on write, and the limiter then silently uses memory.
+ */
+export async function rateLimitProbe(): Promise<{ ok: boolean; error?: string }> {
+  if (!redis) return { ok: false, error: "no-credentials" };
+  try {
+    await redis.set("hb_rl:__probe__", "1", { ex: 60 });
+    const value = await redis.get<string>("hb_rl:__probe__");
+    return { ok: value === "1" };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 const redis = credentials ? new Redis(credentials) : null;
@@ -114,8 +140,11 @@ export async function rateLimit(
         ok: r.success,
         retryAfter: r.success ? 0 : Math.max(1, Math.ceil((r.reset - Date.now()) / 1000)),
       };
-    } catch {
-      // If Redis is unreachable, fall back to memory rather than failing open hard.
+    } catch (e) {
+      // Fall back to memory rather than failing open hard — but say so. Silently
+      // swallowing this makes a bad token or wrong URL look exactly like a working
+      // limiter: configured, returning 429s, writing nothing to Redis.
+      console.error("[rateLimit] Upstash request failed, using in-memory fallback:", e);
       return memoryLimit(key, limit, windowMs);
     }
   }

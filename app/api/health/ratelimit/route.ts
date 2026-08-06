@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { rateLimitStatus } from "@/app/lib/rateLimit";
+import { rateLimitStatus, rateLimitProbe } from "@/app/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,7 +11,9 @@ export const dynamic = "force-dynamic";
  * limiter is confirmed working.
  */
 export async function GET() {
-  return NextResponse.json(rateLimitStatus(), {
-    headers: { "Cache-Control": "no-store" },
-  });
+  const probe = await rateLimitProbe();
+  return NextResponse.json(
+    { ...rateLimitStatus(), probe },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
