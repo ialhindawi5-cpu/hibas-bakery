@@ -69,12 +69,21 @@ export function rateLimitStatus() {
  * from "credentials that actually work" — a wrong or read-only token authenticates
  * as configured but fails on write, and the limiter then silently uses memory.
  */
-export async function rateLimitProbe(): Promise<{ ok: boolean; error?: string }> {
+export async function rateLimitProbe(): Promise<{
+  ok: boolean;
+  dbsize?: number;
+  error?: string;
+}> {
   if (!redis) return { ok: false, error: "no-credentials" };
   try {
     await redis.set("hb_rl:__probe__", "1", { ex: 60 });
-    const value = await redis.get<string>("hb_rl:__probe__");
-    return { ok: value === "1" };
+    // Upstash JSON-parses on read, so "1" comes back as the number 1.
+    // Compare loosely via String() rather than against the literal string.
+    const value = await redis.get("hb_rl:__probe__");
+    // Key count in whichever database is actually configured — this is what
+    // shows rate-limit counters accumulating, rather than trusting 429s.
+    const dbsize = await redis.dbsize();
+    return { ok: String(value) === "1", dbsize };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
