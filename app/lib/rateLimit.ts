@@ -17,22 +17,42 @@ import { Redis } from "@upstash/redis";
  * belonging to two different databases can never be paired — and the sibling
  * READ_ONLY_TOKEN, which cannot increment counters, is never picked up.
  */
-function upstashCredentials(): { url: string; token: string } | null {
+type Credentials = { url: string; token: string; source: "canonical" | "kv" };
+
+function upstashCredentials(): Credentials | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (url && token) return { url, token };
+  if (url && token) return { url, token, source: "canonical" };
 
   for (const key of Object.keys(process.env)) {
     if (!/(^|_)KV_REST_API_URL$/.test(key)) continue;
     const kvUrl = process.env[key];
     const kvToken = process.env[key.replace(/URL$/, "TOKEN")];
-    if (kvUrl && kvToken) return { url: kvUrl, token: kvToken };
+    if (kvUrl && kvToken) return { url: kvUrl, token: kvToken, source: "kv" };
   }
   return null;
 }
 
 const credentials = upstashCredentials();
 const upstashConfigured = credentials !== null;
+
+/**
+ * Non-secret view of how the limiter resolved its configuration, for the
+ * /api/health/ratelimit diagnostic. Deliberately exposes no values and no
+ * variable names — only counts and which naming scheme matched.
+ */
+export function rateLimitStatus() {
+  const envKeys = Object.keys(process.env);
+  return {
+    upstashConfigured,
+    source: credentials?.source ?? null,
+    canonicalUrlPresent: Boolean(process.env.UPSTASH_REDIS_REST_URL),
+    canonicalTokenPresent: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN),
+    kvUrlCandidates: envKeys.filter((k) => /(^|_)KV_REST_API_URL$/.test(k)).length,
+    kvTokenCandidates: envKeys.filter((k) => /(^|_)KV_REST_API_TOKEN$/.test(k)).length,
+    totalEnvKeys: envKeys.length,
+  };
+}
 
 const redis = credentials ? new Redis(credentials) : null;
 
