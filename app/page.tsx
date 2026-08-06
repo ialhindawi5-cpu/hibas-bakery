@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings, getFeaturedMenu, getGallery } from "./lib/content";
 import { getApprovedTestimonials } from "./lib/testimonials";
+import { pageMetadata } from "./lib/seoMeta";
 import TestimonialForm from "./components/TestimonialForm";
 import TestimonialsCarousel from "./components/TestimonialsCarousel";
+
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("home");
+}
 
 export const dynamic = "force-dynamic";
 

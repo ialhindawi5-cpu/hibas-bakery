@@ -1,7 +1,9 @@
 import type { Settings, MenuItem, GalleryImage, Question } from "./types";
+import { DEFAULT_SEO } from "./seo";
 
 export const DEFAULT_SETTINGS: Settings = {
   siteName: "Hiba's Bakery",
+  seo: DEFAULT_SEO,
   orderEmail: "Hiba.alhad@gmail.com",
   contactEmail: "i.alhindawi5@gmail.com",
   phoneDisplay: "+1 (613) 866-3231",

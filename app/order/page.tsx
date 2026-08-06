@@ -4,11 +4,11 @@ import OrderForm from "../components/OrderForm";
 import ActiveOrders from "../components/ActiveOrders";
 import { getSettings, getMenu, getQuestions } from "../lib/content";
 import { getActiveOrdersByDevice } from "../lib/orders";
+import { pageMetadata } from "../lib/seoMeta";
 
-export const metadata: Metadata = {
-  title: "Order",
-  description: "Place an order request. Choose your treats, pickup date and time.",
-};
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("order");
+}
 
 export const dynamic = "force-dynamic";
 

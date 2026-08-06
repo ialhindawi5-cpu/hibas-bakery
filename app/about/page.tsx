@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { getSettings } from "../lib/content";
+import { pageMetadata } from "../lib/seoMeta";
 
-export const metadata: Metadata = {
-  title: "About",
-  description:
-    "The story behind our bakery — homemade cookies, Arab desserts, cheesecake, and sourdough breads, baked fresh to order in small batches.",
-};
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("about");
+}
 
 export const dynamic = "force-dynamic";
 

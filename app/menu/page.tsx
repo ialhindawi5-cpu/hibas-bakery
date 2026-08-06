@@ -1,23 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getMenu, getPricedMenu } from "../lib/content";
+import JsonLd from "../components/JsonLd";
+import { getMenu, getPricedMenu, getSettings } from "../lib/content";
+import { menuJsonLd, mergeSeo } from "../lib/seo";
+import { pageMetadata } from "../lib/seoMeta";
+import { siteUrl } from "../lib/siteUrl";
 
-export const metadata: Metadata = {
-  title: "Menu",
-  description:
-    "Browse the full menu: crinkle cookies, chocolate chip cookies, Arab desserts, cheesecake, and sourdough breads.",
-};
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("menu");
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function MenuPage() {
-  const [menu, priced] = await Promise.all([
+  const [menu, priced, settings] = await Promise.all([
     getMenu({ activeOnly: true }),
     getPricedMenu(),
+    getSettings(),
   ]);
+  const seo = mergeSeo(settings.seo);
 
   return (
     <>
+      {seo.structuredData && (
+        <JsonLd data={menuJsonLd(priced, siteUrl(), settings.siteName)} />
+      )}
       <div className="page-header">
         <div className="container">
           <p className="eyebrow">What we bake</p>

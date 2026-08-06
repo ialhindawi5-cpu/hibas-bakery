@@ -41,6 +41,10 @@ async function init() {
   await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS logo_updated_at timestamptz`;
   await sql`UPDATE settings SET logo_updated_at = now()
     WHERE logo_data IS NOT NULL AND logo_updated_at IS NULL`;
+  // Social share (Open Graph) image, managed under Admin → SEO.
+  await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS og_image_data text`;
+  await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS og_image_mime text`;
+  await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS og_image_updated_at timestamptz`;
   await sql`CREATE TABLE IF NOT EXISTS settings_history (
     id serial PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT now(),

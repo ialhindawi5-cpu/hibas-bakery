@@ -1,5 +1,47 @@
+/* ---------------- SEO ---------------- */
+
+// The public pages we let the admin tune individually.
+export type SeoPageKey = "home" | "menu" | "order" | "about" | "contact";
+
+export type SeoPage = {
+  // Blank falls back to the built-in default for that page.
+  title: string;
+  description: string;
+  // Keep the page on the site but out of Google's index.
+  noindex: boolean;
+};
+
+// Feeds the LocalBusiness/Bakery structured data Google reads for the
+// "business card" panel, maps and local results.
+export type SeoBusiness = {
+  type: string; // schema.org type, e.g. "Bakery"
+  streetAddress: string;
+  city: string;
+  region: string; // province / state
+  postalCode: string;
+  country: string; // 2-letter code, e.g. "CA"
+  latitude: string;
+  longitude: string;
+  priceRange: string; // e.g. "$$"
+  servesCuisine: string[];
+  openingHours: string[]; // schema.org format, e.g. "Mo-Sa 11:00-19:00"
+  sameAs: string[]; // extra profile URLs (Instagram is added automatically)
+};
+
+export type Seo = {
+  // Master switch. Off ⇒ robots.txt disallows everything and every page is noindex.
+  indexable: boolean;
+  keywords: string[];
+  googleVerification: string; // Search Console "HTML tag" content value
+  bingVerification: string;
+  structuredData: boolean; // emit JSON-LD
+  pages: Record<SeoPageKey, SeoPage>;
+  business: SeoBusiness;
+};
+
 export type Settings = {
   siteName: string;
+  seo: Seo;
   orderEmail: string;
   contactEmail: string;
   phoneDisplay: string;

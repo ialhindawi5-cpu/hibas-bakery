@@ -89,6 +89,6 @@ export const config = {
   // are publicly cacheable, and attaching a Set-Cookie to them stops the CDN
   // from caching them at all.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|robots.txt|sitemap.xml|images/|logo.png|api/logo|api/favicon|api/menu-image|api/gallery-image|api/about-image).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|robots.txt|sitemap.xml|images/|logo.png|api/logo|api/favicon|api/og-image|api/menu-image|api/gallery-image|api/about-image).*)",
   ],
 };

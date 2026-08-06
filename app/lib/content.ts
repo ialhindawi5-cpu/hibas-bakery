@@ -7,6 +7,7 @@ import {
   DEFAULT_GALLERY,
   DEFAULT_QUESTIONS,
 } from "./defaults";
+import { mergeSeo } from "./seo";
 import type {
   Settings,
   MenuItem,
@@ -17,12 +18,20 @@ import type {
 
 /* ---------------- Settings ---------------- */
 
+// Stored settings are merged shallowly over the defaults, which would leave the
+// nested `seo` object stuck at whatever shape it had when it was last saved.
+// Normalising here means every reader gets a complete, current-shape object.
+function normalize(stored: Partial<Settings> | null | undefined): Settings {
+  const merged = { ...DEFAULT_SETTINGS, ...(stored ?? {}) };
+  return { ...merged, seo: mergeSeo(merged.seo) };
+}
+
 export async function getSettings(): Promise<Settings> {
-  if (!sql) return DEFAULT_SETTINGS;
+  if (!sql) return normalize(null);
   await ensureDb();
   const rows = await sql`SELECT data FROM settings WHERE id = 1`;
-  if (rows.length === 0) return DEFAULT_SETTINGS;
-  return { ...DEFAULT_SETTINGS, ...(rows[0].data as Partial<Settings>) };
+  if (rows.length === 0) return normalize(null);
+  return normalize(rows[0].data as Partial<Settings>);
 }
 
 export async function updateSettings(patch: Partial<Settings>): Promise<Settings> {
@@ -37,12 +46,12 @@ export async function updateSettings(patch: Partial<Settings>): Promise<Settings
 
 // The admin edits a DRAFT; the public site reads the PUBLISHED `data`.
 export async function getDraftSettings(): Promise<Settings> {
-  if (!sql) return DEFAULT_SETTINGS;
+  if (!sql) return normalize(null);
   await ensureDb();
   const rows = await sql`SELECT data, draft FROM settings WHERE id = 1`;
-  if (rows.length === 0) return DEFAULT_SETTINGS;
+  if (rows.length === 0) return normalize(null);
   const base = (rows[0].draft as Partial<Settings> | null) ?? (rows[0].data as Partial<Settings>);
-  return { ...DEFAULT_SETTINGS, ...base };
+  return normalize(base);
 }
 
 // Save changes to the draft only (does NOT affect the live site).
@@ -463,4 +472,51 @@ export async function clearAboutImage(): Promise<void> {
   await ensureDb();
   await sql`UPDATE settings SET about_image_data=NULL, about_image_mime=NULL WHERE id = 1`;
   await saveDraft({ aboutImage: "/images/sourdough.jpg" });
+}
+
+/* ---------------- Social share (Open Graph) image ---------------- */
+
+/**
+ * The picture WhatsApp/Facebook/X show when someone shares a link. Falls back
+ * to the logo so a shared link is never a blank grey box.
+ */
+export async function getSocialImage(): Promise<{ src: string; custom: boolean } | null> {
+  if (sql) {
+    await ensureDb();
+    const rows = await sql`SELECT (og_image_data IS NOT NULL) AS has, og_image_updated_at
+      FROM settings WHERE id = 1`;
+    if (rows.length && rows[0].has) {
+      const version = rows[0].og_image_updated_at
+        ? new Date(rows[0].og_image_updated_at).getTime()
+        : 0;
+      return { src: `/api/og-image?v=${version}`, custom: true };
+    }
+  }
+  const logo = await getLogoInfo();
+  return logo.hasLogo && logo.src ? { src: logo.src, custom: false } : null;
+}
+
+export async function getSocialImageData(): Promise<{ data: Buffer; mime: string } | null> {
+  if (!sql) return null;
+  await ensureDb();
+  const rows = await sql`SELECT og_image_data, og_image_mime FROM settings WHERE id = 1`;
+  if (!rows.length || !rows[0].og_image_data) return null;
+  return {
+    data: Buffer.from(rows[0].og_image_data, "base64"),
+    mime: rows[0].og_image_mime || "image/jpeg",
+  };
+}
+
+export async function setSocialImage(base64: string, mime: string): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`UPDATE settings SET og_image_data=${base64}, og_image_mime=${mime},
+    og_image_updated_at=now() WHERE id = 1`;
+}
+
+export async function clearSocialImage(): Promise<void> {
+  if (!sql) throw new Error("Database not configured");
+  await ensureDb();
+  await sql`UPDATE settings SET og_image_data=NULL, og_image_mime=NULL,
+    og_image_updated_at=now() WHERE id = 1`;
 }

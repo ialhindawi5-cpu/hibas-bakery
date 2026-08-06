@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings } from "../lib/content";
 import ContactForm from "../components/ContactForm";
+import { pageMetadata } from "../lib/seoMeta";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Get in touch — phone, email, Instagram, and pickup location.",
-};
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("contact");
+}
 
 export const dynamic = "force-dynamic";
 
