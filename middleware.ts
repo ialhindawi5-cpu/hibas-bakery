@@ -52,8 +52,11 @@ export async function middleware(req: NextRequest) {
   };
 
   const isLogin = pathname === "/admin/login" || pathname === "/api/admin/login";
-  const isAdminPage = pathname.startsWith("/admin") && !isLogin;
-  const isAdminApi = pathname.startsWith("/api/admin") && !isLogin;
+  // Match the admin section exactly, not by bare prefix: "/administrator" is not
+  // an admin route and should 404 rather than bounce to the login page.
+  const inSection = (root: string) => pathname === root || pathname.startsWith(`${root}/`);
+  const isAdminPage = inSection("/admin") && !isLogin;
+  const isAdminApi = inSection("/api/admin") && !isLogin;
 
   if (isAdminPage || isAdminApi) {
     const secret = getSecret();

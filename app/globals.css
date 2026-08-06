@@ -1130,6 +1130,13 @@ section {
   font-size: 0.95rem;
 }
 
+/* A step card that is itself a link (404 quick links). Inherit the page text
+   colour instead of the anchor colour, so the card's own hover styling wins. */
+.step-link {
+  display: block;
+  color: inherit;
+}
+
 /* ---------- CTA band ---------- */
 .cta-band {
   background: linear-gradient(120deg, var(--accent), var(--accent-2));
