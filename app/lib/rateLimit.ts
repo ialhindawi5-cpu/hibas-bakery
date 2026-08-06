@@ -5,16 +5,36 @@ import { Redis } from "@upstash/redis";
 // Falls back to an in-memory limiter (per instance) when the env vars are absent,
 // so the app still works locally and before Upstash is set up.
 
-const upstashConfigured = Boolean(
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-);
+/**
+ * Resolve the Upstash REST credentials.
+ *
+ * The canonical names are UPSTASH_REDIS_REST_URL / _TOKEN, but Vercel's Storage
+ * integration injects the same database under a KV_ name with a chosen prefix
+ * (e.g. Redis_KV_REST_API_URL). Accept either so connecting a database from the
+ * Vercel dashboard just works, with no credentials copied by hand.
+ *
+ * The token is always derived from the URL key that matched, so a URL and token
+ * belonging to two different databases can never be paired — and the sibling
+ * READ_ONLY_TOKEN, which cannot increment counters, is never picked up.
+ */
+function upstashCredentials(): { url: string; token: string } | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (url && token) return { url, token };
 
-const redis = upstashConfigured
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-    })
-  : null;
+  for (const key of Object.keys(process.env)) {
+    if (!/(^|_)KV_REST_API_URL$/.test(key)) continue;
+    const kvUrl = process.env[key];
+    const kvToken = process.env[key.replace(/URL$/, "TOKEN")];
+    if (kvUrl && kvToken) return { url: kvUrl, token: kvToken };
+  }
+  return null;
+}
+
+const credentials = upstashCredentials();
+const upstashConfigured = credentials !== null;
+
+const redis = credentials ? new Redis(credentials) : null;
 
 // The in-memory fallback is per-instance. On serverless (Vercel) each request can
 // land on a different instance, so counters never accumulate and the limits below
