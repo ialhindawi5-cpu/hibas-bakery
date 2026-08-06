@@ -7,66 +7,37 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-// Where people most likely meant to go. Kept static on purpose: a 404 shouldn't
-// need a database round-trip, and the footer already carries the contact details.
-const LINKS = [
-  {
-    href: "/menu",
-    icon: "🍪",
-    title: "Our Menu",
-    text: "Cookies, Arab desserts, cheesecake and sourdough breads.",
-  },
-  {
-    href: "/order",
-    icon: "🧁",
-    title: "Place an Order",
-    text: "Choose your treats and a pickup date and time.",
-  },
-  {
-    href: "/contact",
-    icon: "💬",
-    title: "Contact Us",
-    text: "Questions or a custom request? We'd love to hear from you.",
-  },
-];
-
 export default function NotFound() {
   return (
-    <>
-      <div className="page-header">
-        <div className="container">
-          <p className="eyebrow">Error 404</p>
-          <h1>This page is out of the oven</h1>
-          <p>
-            We couldn&apos;t find the page you were looking for. It may have been moved, or
-            the link might have a small typo in it.
-          </p>
-          <div className="cta" style={{ marginTop: 28 }}>
-            <Link className="btn btn-primary" href="/">
-              Back to home
-            </Link>
-            <Link className="btn btn-ghost" href="/menu">
-              Browse the menu
-            </Link>
-          </div>
+    <section className="notfound">
+      <div className="container">
+        {/* Decorative: the heading below carries the meaning for screen readers. */}
+        <div className="nf-code" aria-hidden="true">
+          404
         </div>
+        <h1 className="nf-title">Page Not Found</h1>
+        <p className="nf-text">
+          The page you were looking for has moved, or never existed.
+        </p>
+        <Link className="nf-btn" href="/">
+          Back Home
+          <span className="nf-btn-arrow" aria-hidden="true">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </span>
+        </Link>
       </div>
-
-      <section>
-        <div className="container">
-          <div className="steps">
-            {LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="step step-link">
-                <div className="num" aria-hidden="true">
-                  {l.icon}
-                </div>
-                <h3>{l.title}</h3>
-                <p>{l.text}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-    </>
+    </section>
   );
 }

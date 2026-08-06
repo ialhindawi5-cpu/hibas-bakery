@@ -1130,11 +1130,73 @@ section {
   font-size: 0.95rem;
 }
 
-/* A step card that is itself a link (404 quick links). Inherit the page text
-   colour instead of the anchor colour, so the card's own hover styling wins. */
-.step-link {
-  display: block;
-  color: inherit;
+/* ---------- 404 ---------- */
+.notfound {
+  text-align: center;
+  padding: 72px 0 104px;
+}
+.nf-code {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: clamp(6rem, 21vw, 13rem);
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+  margin-bottom: 20px;
+  /* Solid colour first: if background-clip:text isn't supported, transparent
+     text would render the numeral invisible. */
+  color: var(--accent-2);
+}
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .nf-code {
+    background: linear-gradient(120deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+.nf-title {
+  font-family: var(--serif);
+  font-size: clamp(1.9rem, 5vw, 3rem);
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.nf-text {
+  color: var(--muted);
+  max-width: 470px;
+  margin: 0 auto 36px;
+}
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 11px 10px 28px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.nf-btn:hover {
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.nf-btn-arrow {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.24);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nf-btn {
+    transition: none;
+  }
+  .nf-btn:hover {
+    transform: none;
+  }
 }
 
 /* ---------- CTA band ---------- */
