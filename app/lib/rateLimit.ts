@@ -16,6 +16,17 @@ const redis = upstashConfigured
     })
   : null;
 
+// The in-memory fallback is per-instance. On serverless (Vercel) each request can
+// land on a different instance, so counters never accumulate and the limits below
+// are effectively NOT enforced. Warn loudly rather than fail silently.
+if (!upstashConfigured && process.env.NODE_ENV === "production") {
+  console.warn(
+    "[rateLimit] UPSTASH_REDIS_REST_URL/TOKEN are not set. Falling back to an " +
+      "in-memory limiter, which does not work across serverless instances — " +
+      "order, contact and login rate limits are effectively disabled."
+  );
+}
+
 const limiters = new Map<string, Ratelimit>();
 
 function upstashLimiter(limit: number, windowSec: number): Ratelimit {

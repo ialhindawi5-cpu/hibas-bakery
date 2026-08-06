@@ -8,7 +8,9 @@ export async function GET() {
   return new Response(new Uint8Array(logo.data), {
     headers: {
       "Content-Type": logo.mime,
-      "Cache-Control": "no-store",
+      // URL is versioned (?v=<logo_updated_at>) by getLogoInfo, so this can cache
+      // hard — the logo sits in the header of every page.
+      "Cache-Control": "public, max-age=31536000, immutable",
     },
   });
 }

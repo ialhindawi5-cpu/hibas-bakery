@@ -37,7 +37,9 @@ export async function GET() {
     {
       width: SIZE,
       height: SIZE,
-      headers: { "Cache-Control": "public, max-age=3600" },
+      // URL is versioned (?v=<logo_updated_at>) by the root layout, so this can
+      // cache hard — every page render otherwise re-rasterises the logo.
+      headers: { "Cache-Control": "public, max-age=31536000, immutable" },
     }
   );
 }

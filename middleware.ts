@@ -82,5 +82,10 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|images/|logo.png).*)"],
+  // Skip static assets, the metadata files and the image routes. Those responses
+  // are publicly cacheable, and attaching a Set-Cookie to them stops the CDN
+  // from caching them at all.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|robots.txt|sitemap.xml|images/|logo.png|api/logo|api/favicon|api/menu-image|api/gallery-image|api/about-image).*)",
+  ],
 };

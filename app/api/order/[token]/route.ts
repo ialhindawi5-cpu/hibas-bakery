@@ -9,9 +9,22 @@ import {
 import { getSettings, getQuestions } from "@/app/lib/content";
 import { sendOrderEmail, sendCustomerOrderEmail } from "@/app/lib/email";
 import { buildOrder, isEditable, type IncomingAnswer } from "@/app/lib/orderBuild";
+import { rateLimit, clientIp } from "@/app/lib/rateLimit";
 import type { Order } from "@/app/lib/types";
 
 export const runtime = "nodejs";
+
+// Both handlers below send two emails per successful call, so throttle them even
+// though they're already guarded by a secret token.
+const EDIT_LIMIT = 10;
+const EDIT_WINDOW_MS = 10 * 60 * 1000;
+
+function tooManyRequests(retryAfter: number) {
+  return NextResponse.json(
+    { error: "You've made several changes already. Please wait a few minutes." },
+    { status: 429, headers: { "Retry-After": String(retryAfter) } }
+  );
+}
 
 // Public site origin, honouring the proxy headers Vercel sets.
 function siteOrigin(req: Request): string {
@@ -23,6 +36,9 @@ function siteOrigin(req: Request): string {
 // Update an existing order via its secret edit token, while still editable.
 export async function PUT(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+
+  const rl = await rateLimit(`order-edit:${clientIp(req)}`, EDIT_LIMIT, EDIT_WINDOW_MS);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
 
   const existing = await getOrderByToken(token);
   if (!existing) {
@@ -90,8 +106,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
 }
 
 // Customer cancels their own order (soft-cancel), while still editable.
-export async function DELETE(_req: Request, { params }: { params: Promise<{ token: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
+
+  const rl = await rateLimit(`order-cancel:${clientIp(req)}`, EDIT_LIMIT, EDIT_WINDOW_MS);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
 
   const existing = await getOrderByToken(token);
   if (!existing) {

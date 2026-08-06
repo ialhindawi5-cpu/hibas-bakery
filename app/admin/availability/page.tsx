@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import type { Settings } from "@/app/lib/types";
+import { slotsOutsideHours, parseHours, minutesToLabel } from "@/app/lib/openingHours";
 
 function fmt(t: string): string {
   const [h, m] = t.split(":").map(Number);
@@ -14,6 +15,8 @@ function fmt(t: string): string {
 export default function AdminAvailability() {
   const [slots, setSlots] = useState<string[]>([]);
   const [blocked, setBlocked] = useState<string[]>([]);
+  // Working hours are set on the Settings page; shown here only to catch drift.
+  const [hours, setHours] = useState("");
   const [newSlot, setNewSlot] = useState("");
   const [newDate, setNewDate] = useState("");
   const [loading, setLoading] = useState(true);
@@ -28,6 +31,7 @@ export default function AdminAvailability() {
       );
       setSlots([...(s.pickupSlots || [])].sort());
       setBlocked([...(s.blockedDates || [])].sort());
+      setHours(s.hours || "");
     } catch {
       setNote({ type: "err", msg: "Failed to load" });
     } finally {
@@ -70,6 +74,10 @@ export default function AdminAvailability() {
     }
   }
 
+  // Slots the customer can pick but the stated opening hours say you're closed for.
+  const outside = useMemo(() => slotsOutsideHours(slots, hours), [slots, hours]);
+  const range = useMemo(() => parseHours(hours), [hours]);
+
   if (loading) return <p className="order-meta">Loading…</p>;
 
   return (
@@ -86,7 +94,22 @@ export default function AdminAvailability() {
         <h2>Pickup time slots</h2>
         <p className="order-meta" style={{ marginBottom: 12 }}>
           Customers pick one of these times.
+          {hours && (
+            <>
+              {" "}
+              Your working hours are set to <strong>{hours}</strong>
+              {range && ` (${minutesToLabel(range.open)} – ${minutesToLabel(range.close)})`}.
+            </>
+          )}
         </p>
+        {outside.length > 0 && (
+          <div className="admin-note err" style={{ marginBottom: 12 }}>
+            {outside.length === 1 ? "This slot is" : "These slots are"} outside your stated
+            working hours: <strong>{outside.map(fmt).join(", ")}</strong>. Customers can still
+            book {outside.length === 1 ? "it" : "them"} — remove{" "}
+            {outside.length === 1 ? "it" : "them"} below, or update your hours in Settings.
+          </div>
+        )}
         <div className="chip-list">
           {slots.map((s) => (
             <span className="chip" key={s}>

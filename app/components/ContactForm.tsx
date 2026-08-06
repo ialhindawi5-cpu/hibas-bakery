@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Turnstile from "@/app/components/Turnstile";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 
 export default function ContactForm() {
   const [name, setName] = useState("");
@@ -8,6 +11,7 @@ export default function ContactForm() {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [hp, setHp] = useState("");
+  const [captcha, setCaptcha] = useState("");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -19,12 +23,16 @@ export default function ContactForm() {
       setError("Please enter your name and a message.");
       return;
     }
+    if (TURNSTILE_SITE_KEY && !captcha) {
+      setError("Please complete the verification challenge.");
+      return;
+    }
     setSending(true);
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, message, hp }),
+        body: JSON.stringify({ name, email, phone, message, hp, captcha }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -99,6 +107,7 @@ export default function ContactForm() {
           style={{ minHeight: 120 }}
         />
       </div>
+      {TURNSTILE_SITE_KEY && <Turnstile siteKey={TURNSTILE_SITE_KEY} onVerify={setCaptcha} />}
       <button type="submit" className="btn btn-primary" disabled={sending}>
         {sending ? "Sending…" : "Send message"}
       </button>

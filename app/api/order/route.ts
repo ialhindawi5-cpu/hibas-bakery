@@ -5,6 +5,7 @@ import { createOrder, type NewOrder, type OrderFormState } from "@/app/lib/order
 import { getSettings, getQuestions } from "@/app/lib/content";
 import { sendOrderEmail } from "@/app/lib/email";
 import { rateLimit, clientIp } from "@/app/lib/rateLimit";
+import { verifyTurnstile } from "@/app/lib/turnstile";
 import { buildOrder, type IncomingAnswer } from "@/app/lib/orderBuild";
 import type { Order } from "@/app/lib/types";
 
@@ -20,11 +21,26 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { answers?: IncomingAnswer[]; hp?: string; formState?: OrderFormState };
+  let body: {
+    answers?: IncomingAnswer[];
+    hp?: string;
+    formState?: OrderFormState;
+    captcha?: string;
+  };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Cloudflare Turnstile (only enforced when TURNSTILE_SECRET_KEY is configured).
+  // The honeypot below only stops naive bots — a direct API call skips it entirely,
+  // so this is what actually gates scripted order spam.
+  if (!(await verifyTurnstile(body.captcha, clientIp(req)))) {
+    return NextResponse.json(
+      { error: "Verification failed. Please reload the page and try again." },
+      { status: 400 }
+    );
   }
 
   // Honeypot: bots fill hidden fields. Pretend success without saving.

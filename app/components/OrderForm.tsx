@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Turnstile from "@/app/components/Turnstile";
 import type { Question } from "../lib/types";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 
 type Values = Record<string, string | string[]>;
 
@@ -81,6 +84,7 @@ export default function OrderForm({
   // Quantity per selected priced option, keyed by "<qkey>|<option>". Defaults to 1.
   const [qty, setQty] = useState<Record<string, number>>(initialQty || {});
   const [hp, setHp] = useState(""); // honeypot — real users leave this empty
+  const [captcha, setCaptcha] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -164,6 +168,11 @@ export default function OrderForm({
       document.querySelector(".error")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    // New orders are challenged; edits are already gated by the secret token.
+    if (!isEdit && TURNSTILE_SITE_KEY && !captcha) {
+      setServerError("Please complete the verification challenge below.");
+      return;
+    }
 
     const answers = questions.map((q) => {
       const v = values[q.qkey];
@@ -196,7 +205,7 @@ export default function OrderForm({
       const res = await fetch(isEdit ? `/api/order/${editToken}` : "/api/order", {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers, hp, formState }),
+        body: JSON.stringify({ answers, hp, formState, captcha }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -516,6 +525,9 @@ export default function OrderForm({
         </div>
       )}
 
+      {!isEdit && TURNSTILE_SITE_KEY && (
+        <Turnstile siteKey={TURNSTILE_SITE_KEY} onVerify={setCaptcha} />
+      )}
       <button type="submit" className="btn btn-primary" disabled={submitting}>
         {submitting ? "Saving…" : isEdit ? "Save changes" : "Submit order request"}
       </button>

@@ -386,20 +386,32 @@ export async function deleteQuestion(id: number): Promise<void> {
 
 /* ---------------- Logo ---------------- */
 
-export async function getLogoInfo(): Promise<{ hasLogo: boolean; src: string | null }> {
+export async function getLogoInfo(): Promise<{
+  hasLogo: boolean;
+  src: string | null;
+  version: number;
+}> {
   if (sql) {
     await ensureDb();
-    const rows = await sql`SELECT (logo_data IS NOT NULL) AS has FROM settings WHERE id = 1`;
-    if (rows.length && rows[0].has) return { hasLogo: true, src: "/api/logo" };
+    const rows = await sql`SELECT (logo_data IS NOT NULL) AS has, logo_updated_at
+      FROM settings WHERE id = 1`;
+    if (rows.length && rows[0].has) {
+      // Version the URL so /api/logo and /api/favicon can be served immutably and
+      // still update the moment a new logo is uploaded.
+      const version = rows[0].logo_updated_at
+        ? new Date(rows[0].logo_updated_at).getTime()
+        : 0;
+      return { hasLogo: true, src: `/api/logo?v=${version}`, version };
+    }
   }
   try {
     if (fs.existsSync(path.join(process.cwd(), "public", "logo.png"))) {
-      return { hasLogo: true, src: "/logo.png" };
+      return { hasLogo: true, src: "/logo.png", version: 0 };
     }
   } catch {
     /* ignore */
   }
-  return { hasLogo: false, src: null };
+  return { hasLogo: false, src: null, version: 0 };
 }
 
 export async function getLogoData(): Promise<{ data: Buffer; mime: string } | null> {
@@ -413,13 +425,15 @@ export async function getLogoData(): Promise<{ data: Buffer; mime: string } | nu
 export async function setLogo(base64: string, mime: string): Promise<void> {
   if (!sql) throw new Error("Database not configured");
   await ensureDb();
-  await sql`UPDATE settings SET logo_data=${base64}, logo_mime=${mime} WHERE id = 1`;
+  await sql`UPDATE settings SET logo_data=${base64}, logo_mime=${mime}, logo_updated_at=now()
+    WHERE id = 1`;
 }
 
 export async function clearLogo(): Promise<void> {
   if (!sql) throw new Error("Database not configured");
   await ensureDb();
-  await sql`UPDATE settings SET logo_data=NULL, logo_mime=NULL WHERE id = 1`;
+  await sql`UPDATE settings SET logo_data=NULL, logo_mime=NULL, logo_updated_at=now()
+    WHERE id = 1`;
 }
 
 /* ---------------- About image ---------------- */

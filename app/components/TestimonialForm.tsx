@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Turnstile from "@/app/components/Turnstile";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 
 export default function TestimonialForm() {
   const [name, setName] = useState("");
@@ -8,6 +11,7 @@ export default function TestimonialForm() {
   const [rating, setRating] = useState(5);
   const [hover, setHover] = useState(0);
   const [hp, setHp] = useState("");
+  const [captcha, setCaptcha] = useState("");
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -19,12 +23,16 @@ export default function TestimonialForm() {
       setError("Please enter your name and your review.");
       return;
     }
+    if (TURNSTILE_SITE_KEY && !captcha) {
+      setError("Please complete the verification challenge.");
+      return;
+    }
     setSending(true);
     try {
       const res = await fetch("/api/testimonials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, quote, rating, hp }),
+        body: JSON.stringify({ name, quote, rating, hp, captcha }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -110,6 +118,7 @@ export default function TestimonialForm() {
           maxLength={1000}
         />
       </div>
+      {TURNSTILE_SITE_KEY && <Turnstile siteKey={TURNSTILE_SITE_KEY} onVerify={setCaptcha} />}
       <button type="submit" className="btn btn-primary" disabled={sending}>
         {sending ? "Submitting…" : "Submit review"}
       </button>

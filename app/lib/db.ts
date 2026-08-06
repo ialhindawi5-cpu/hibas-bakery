@@ -35,6 +35,12 @@ async function init() {
   await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_image_data text`;
   await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS about_image_mime text`;
   await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS draft jsonb`;
+  // Version stamp for the logo, so /api/logo can be cached immutably and busted
+  // by a ?v= query param whenever the logo actually changes. Backfill once so
+  // existing logos get a stable (not constantly-changing) version.
+  await sql`ALTER TABLE settings ADD COLUMN IF NOT EXISTS logo_updated_at timestamptz`;
+  await sql`UPDATE settings SET logo_updated_at = now()
+    WHERE logo_data IS NOT NULL AND logo_updated_at IS NULL`;
   await sql`CREATE TABLE IF NOT EXISTS settings_history (
     id serial PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT now(),

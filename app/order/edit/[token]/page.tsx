@@ -3,7 +3,7 @@ import Link from "next/link";
 import OrderForm from "../../../components/OrderForm";
 import { getSettings, getMenu, getQuestions } from "../../../lib/content";
 import { getOrderByToken } from "../../../lib/orders";
-import { isEditable } from "../../../lib/orderBuild";
+import { isEditable, reconstructFormState } from "../../../lib/orderBuild";
 
 export const metadata: Metadata = {
   title: "Edit your order",
@@ -96,7 +96,9 @@ export default async function EditOrderPage({
     getQuestions({ activeOnly: true }),
   ]);
   const menuOptions = menu.map((m) => m.name);
-  const form = order.formState || { values: {}, qty: {} };
+  // Orders created outside the form (or before form_state existed) have no saved
+  // state — rebuild it from the answers so the customer never sees a blank form.
+  const form = order.formState || reconstructFormState(order.answers, questions, menuOptions);
 
   return (
     <Shell>
